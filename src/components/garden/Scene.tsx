@@ -1,7 +1,7 @@
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, TransformControls } from "@react-three/drei";
 import { Suspense, useEffect, useRef } from "react";
-import type { Object3D, PerspectiveCamera as PerspectiveCameraT } from "three";
+import type { Mesh, PerspectiveCamera as PerspectiveCameraT } from "three";
 import { useGarden } from "@/lib/garden/store";
 import { Ground } from "./Ground";
 import { Sun } from "./Sun";
@@ -38,7 +38,10 @@ export function Scene() {
 }
 
 function CameraRig({ view }: { view: string }) {
-  const { camera, controls } = useThree() as { camera: PerspectiveCameraT; controls: { target: { set: (x: number, y: number, z: number) => void }; update: () => void } | null };
+  const { camera, controls } = useThree() as unknown as {
+    camera: PerspectiveCameraT;
+    controls: { target: { set: (x: number, y: number, z: number) => void }; update: () => void } | null;
+  };
   useEffect(() => {
     if (!camera) return;
     if (view === "top") camera.position.set(0, 14, 0.001);
@@ -60,54 +63,48 @@ function SelectionTransformer() {
   const updatePlanter = useGarden((s) => s.updatePlanter);
   const updatePlant = useGarden((s) => s.updatePlant);
   const mode = useGarden((s) => s.transformMode);
-  const { scene } = useThree();
-  const targetRef = useRef<Object3D | null>(null);
+  const proxyRef = useRef<Mesh>(null);
 
-  // find the threejs object by traversing
-  useEffect(() => {
-    if (!selectedId) {
-      targetRef.current = null;
-      return;
-    }
-    // we tag by setting userData via name; simpler: search by position match
-    // Instead, use a known group name pattern not set. So we search for any selected ring by scanning userData IDs we'd set.
-  }, [selectedId, planters, plants, scene]);
-
-  if (!selectedId) return null;
   const selectedPlanter = planters.find((p) => p.id === selectedId);
   const selectedPlant = plants.find((p) => p.id === selectedId);
-  if (!selectedPlanter && !selectedPlant) return null;
+  const target = selectedPlanter ?? selectedPlant;
 
-  const pos = (selectedPlanter ?? selectedPlant)!.position;
-  const rotY = (selectedPlanter ?? selectedPlant)!.rotationY;
+  // sync proxy to current selection position
+  useEffect(() => {
+    if (!proxyRef.current || !target) return;
+    proxyRef.current.position.set(target.position[0], target.position[1], target.position[2]);
+    proxyRef.current.rotation.set(0, target.rotationY, 0);
+  }, [target]);
+
+  if (!target) return null;
+
+  const handleChange = () => {
+    const obj = proxyRef.current;
+    if (!obj) return;
+    if (selectedPlanter) {
+      updatePlanter(selectedPlanter.id, {
+        position: [obj.position.x, 0, obj.position.z],
+        rotationY: obj.rotation.y,
+      });
+    } else if (selectedPlant) {
+      updatePlant(selectedPlant.id, {
+        position: [obj.position.x, obj.position.y, obj.position.z],
+        rotationY: obj.rotation.y,
+      });
+    }
+  };
 
   return (
     <TransformControls
       mode={mode}
+      object={proxyRef as unknown as React.RefObject<Mesh>}
       showY={mode === "rotate"}
       showX={mode === "translate"}
       showZ={mode === "translate"}
-      position={pos}
-      rotation={[0, rotY, 0]}
-      onObjectChange={() => {
-        // TransformControls in drei doesn't expose the helper object cleanly via event;
-        // we read from controls via ref alternative: query the scene's transform controls object.
-        // Simpler: use onChange of the underlying gizmo by attaching a ref.
-      }}
-      onMouseUp={(e) => {
-        const obj = (e as unknown as { target?: { object?: Object3D } })?.target?.object;
-        if (!obj) return;
-        const newPos: [number, number, number] = [obj.position.x, obj.position.y, obj.position.z];
-        const newRot = obj.rotation.y;
-        if (selectedPlanter) {
-          updatePlanter(selectedPlanter.id, { position: [newPos[0], 0, newPos[2]], rotationY: newRot });
-        } else if (selectedPlant) {
-          updatePlant(selectedPlant.id, { position: newPos, rotationY: newRot });
-        }
-      }}
+      onObjectChange={handleChange}
     >
-      <mesh visible={false}>
-        <boxGeometry args={[0.2, 0.2, 0.2]} />
+      <mesh ref={proxyRef} visible={false}>
+        <boxGeometry args={[0.01, 0.01, 0.01]} />
         <meshBasicMaterial />
       </mesh>
     </TransformControls>
