@@ -1,0 +1,162 @@
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import type { PlantSpecies } from "./plants-catalog";
+import type { Units } from "./units";
+
+export type PlanterShape = "rect" | "circle";
+
+export interface Planter {
+  id: string;
+  shape: PlanterShape;
+  // rect: width (x), depth (z); circle: radius stored in width, depth unused
+  width: number;
+  depth: number;
+  height: number;
+  position: [number, number, number]; // y is base
+  rotationY: number;
+}
+
+export interface Plant {
+  id: string;
+  species: PlantSpecies;
+  plantedInId: string | null;
+  position: [number, number, number];
+  rotationY: number;
+}
+
+export type CameraView = "perspective" | "top" | "front";
+
+interface GardenState {
+  garden: { width: number; depth: number };
+  sunTime: number; // 6..20
+  units: Units;
+  planters: Planter[];
+  plants: Plant[];
+  selectedId: string | null;
+  cameraView: CameraView;
+  transformMode: "translate" | "rotate";
+
+  setGarden: (g: { width: number; depth: number }) => void;
+  setSunTime: (t: number) => void;
+  setUnits: (u: Units) => void;
+  addPlanter: (shape: PlanterShape) => void;
+  updatePlanter: (id: string, patch: Partial<Planter>) => void;
+  addPlant: (species: PlantSpecies) => void;
+  updatePlant: (id: string, patch: Partial<Plant>) => void;
+  deleteSelected: () => void;
+  select: (id: string | null) => void;
+  setCameraView: (v: CameraView) => void;
+  setTransformMode: (m: "translate" | "rotate") => void;
+  clearAll: () => void;
+}
+
+const uid = () => Math.random().toString(36).slice(2, 9);
+
+export const useGarden = create<GardenState>()(
+  persist(
+    (set, get) => ({
+      garden: { width: 6, depth: 4 },
+      sunTime: 13,
+      units: "metric",
+      planters: [],
+      plants: [],
+      selectedId: null,
+      cameraView: "perspective",
+      transformMode: "translate",
+
+      setGarden: (g) => set({ garden: g }),
+      setSunTime: (t) => set({ sunTime: t }),
+      setUnits: (u) => set({ units: u }),
+
+      addPlanter: (shape) => {
+        const id = uid();
+        const planter: Planter = {
+          id,
+          shape,
+          width: shape === "circle" ? 0.4 : 0.8,
+          depth: shape === "circle" ? 0.4 : 0.5,
+          height: 0.4,
+          position: [0, 0, 0],
+          rotationY: 0,
+        };
+        set((s) => ({ planters: [...s.planters, planter], selectedId: id }));
+      },
+
+      updatePlanter: (id, patch) =>
+        set((s) => ({
+          planters: s.planters.map((p) => (p.id === id ? { ...p, ...patch } : p)),
+        })),
+
+      addPlant: (species) => {
+        const id = uid();
+        // place inside selected planter if it's a planter
+        const sel = get().selectedId;
+        const planter = get().planters.find((p) => p.id === sel);
+        let position: [number, number, number] = [0, 0, 0];
+        let plantedInId: string | null = null;
+        if (planter) {
+          position = [planter.position[0], planter.height - 0.02, planter.position[2]];
+          plantedInId = planter.id;
+        }
+        const plant: Plant = { id, species, plantedInId, position, rotationY: 0 };
+        set((s) => ({ plants: [...s.plants, plant], selectedId: id }));
+      },
+
+      updatePlant: (id, patch) =>
+        set((s) => ({
+          plants: s.plants.map((p) => {
+            if (p.id !== id) return p;
+            const next = { ...p, ...patch };
+            // re-evaluate planter attachment based on XZ position
+            if (patch.position) {
+              const planters = get().planters;
+              const inside = planters.find((pl) => {
+                const dx = next.position[0] - pl.position[0];
+                const dz = next.position[2] - pl.position[2];
+                if (pl.shape === "circle") {
+                  return Math.hypot(dx, dz) <= pl.width;
+                }
+                // rect, account for rotation
+                const cos = Math.cos(-pl.rotationY);
+                const sin = Math.sin(-pl.rotationY);
+                const lx = dx * cos - dz * sin;
+                const lz = dx * sin + dz * cos;
+                return Math.abs(lx) <= pl.width / 2 && Math.abs(lz) <= pl.depth / 2;
+              });
+              if (inside) {
+                next.plantedInId = inside.id;
+                next.position = [next.position[0], inside.height - 0.02, next.position[2]];
+              } else {
+                next.plantedInId = null;
+                next.position = [next.position[0], 0, next.position[2]];
+              }
+            }
+            return next;
+          }),
+        })),
+
+      deleteSelected: () => {
+        const id = get().selectedId;
+        if (!id) return;
+        set((s) => ({
+          planters: s.planters.filter((p) => p.id !== id),
+          plants: s.plants.filter((p) => p.id !== id && p.plantedInId !== id),
+          selectedId: null,
+        }));
+      },
+
+      select: (id) => set({ selectedId: id }),
+      setCameraView: (v) => set({ cameraView: v }),
+      setTransformMode: (m) => set({ transformMode: m }),
+      clearAll: () =>
+        set({ planters: [], plants: [], selectedId: null }),
+    }),
+    {
+      name: "garden-planner-v1",
+      storage: createJSONStorage(() =>
+        typeof window !== "undefined" ? localStorage : (undefined as never),
+      ),
+      skipHydration: true,
+    },
+  ),
+);
