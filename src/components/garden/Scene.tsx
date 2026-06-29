@@ -89,8 +89,13 @@ function SelectionTransformer() {
       showZ={mode === "translate"}
       position={pos}
       rotation={[0, rotY, 0]}
-      onObjectChange={(e) => {
-        const obj = e?.target?.object as Object3D | undefined;
+      onObjectChange={() => {
+        // TransformControls in drei doesn't expose the helper object cleanly via event;
+        // we read from controls via ref alternative: query the scene's transform controls object.
+        // Simpler: use onChange of the underlying gizmo by attaching a ref.
+      }}
+      onMouseUp={(e) => {
+        const obj = (e as unknown as { target?: { object?: Object3D } })?.target?.object;
         if (!obj) return;
         const newPos: [number, number, number] = [obj.position.x, obj.position.y, obj.position.z];
         const newRot = obj.rotation.y;

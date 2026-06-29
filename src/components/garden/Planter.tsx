@@ -40,14 +40,6 @@ export function Planter({ planter }: Props) {
             <boxGeometry args={[planter.width - wallT * 2, 0.02, planter.depth - wallT * 2]} />
             <meshStandardMaterial color={SOIL} />
           </mesh>
-          {isSelected && (
-            <lineSegments position={[0, h / 2, 0]}>
-              <edgesGeometry args={[
-                // @ts-expect-error - drei accepts geometry
-                undefined,
-              ]} />
-            </lineSegments>
-          )}
         </>
       ) : (
         <>
