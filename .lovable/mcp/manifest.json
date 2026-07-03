@@ -1,0 +1,148 @@
+{
+  "version": 1,
+  "sdk_version": "0.20.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "garden-planner-mcp",
+      "version": "0.1.0",
+      "title": "Garden Planner MCP"
+    },
+    "tools": [
+      {
+        "name": "list_plants",
+        "title": "List plant catalog",
+        "description": "List all stylized plant species available in the Garden Planner, with mature footprint and height in meters.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_plant",
+        "title": "Get plant details",
+        "description": "Return mature size and description for one plant species in the Garden Planner catalog.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "species": {
+              "type": "string",
+              "enum": [
+                "tomato",
+                "basil",
+                "lavender",
+                "strawberry",
+                "pepper",
+                "fruitTree"
+              ],
+              "description": "Plant species id, e.g. tomato, basil, lavender."
+            }
+          },
+          "required": [
+            "species"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "planter_capacity",
+        "title": "Estimate planter capacity",
+        "description": "Estimate how many plants of a given species comfortably fit in a rectangular or circular planter, using the plant's mature footprint. All dimensions are in meters.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "shape": {
+              "type": "string",
+              "enum": [
+                "rect",
+                "circle"
+              ],
+              "description": "Planter shape."
+            },
+            "width": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "For rect: width in meters. For circle: radius in meters."
+            },
+            "depth": {
+              "description": "Rect only: depth in meters.",
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "species": {
+              "type": "string",
+              "enum": [
+                "tomato",
+                "basil",
+                "lavender",
+                "strawberry",
+                "pepper",
+                "fruitTree"
+              ]
+            }
+          },
+          "required": [
+            "shape",
+            "width",
+            "species"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "sun_exposure_guide",
+        "title": "Sun exposure guide",
+        "description": "Return recommended daily sunlight hours for a Garden Planner plant species.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "species": {
+              "type": "string",
+              "enum": [
+                "tomato",
+                "basil",
+                "lavender",
+                "strawberry",
+                "pepper",
+                "fruitTree"
+              ],
+              "description": "Plant species id."
+            }
+          },
+          "required": [
+            "species"
+          ]
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
