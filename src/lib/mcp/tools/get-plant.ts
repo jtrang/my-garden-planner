@@ -24,7 +24,7 @@ export default defineTool({
     const spec = PLANT_CATALOG[species as PlantSpecies];
     return {
       content: [{ type: "text", text: JSON.stringify(spec, null, 2) }],
-      structuredContent: spec,
+      structuredContent: { ...spec },
     };
   },
 });
