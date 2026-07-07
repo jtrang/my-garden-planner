@@ -39,3 +39,18 @@ export function newPlanterFootprint(shape: PlanterShape) {
     depth: shape === "circle" ? 0.4 : 0.5,
   };
 }
+
+
+/** Returns the planter whose footprint contains (x, z), if any. */
+export function findContainingPlanter(x: number, z: number, planters: Planter[]) {
+  return planters.find((pl) => {
+    const dx = x - pl.position[0];
+    const dz = z - pl.position[2];
+    if (pl.shape === "circle") return Math.hypot(dx, dz) <= pl.width;
+    const cos = Math.cos(-pl.rotationY);
+    const sin = Math.sin(-pl.rotationY);
+    const lx = dx * cos - dz * sin;
+    const lz = dx * sin + dz * cos;
+    return Math.abs(lx) <= pl.width / 2 && Math.abs(lz) <= pl.depth / 2;
+  });
+}

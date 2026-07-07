@@ -3,6 +3,7 @@ import { useRef } from "react";
 import type { Group } from "three";
 import { useGroundDrag } from "./useGroundDrag";
 import { planterOverlaps } from "@/lib/garden/collision";
+import { usePlacementHover } from "@/lib/garden/placement-hover";
 
 interface Props {
   planter: PlanterT;
@@ -40,17 +41,33 @@ export function Planter({ planter }: Props) {
   const wallT = 0.03;
   const h = planter.height;
 
+  const commitPlacement = useGarden((s) => s.commitPlacementAt);
+  const setHoverPos = usePlacementHover((s) => s.setPos);
+  const placingPlant = pending?.kind === "plant";
+
   return (
     <group
       ref={ref}
       position={planter.position}
       rotation={[0, planter.rotationY, 0]}
       onPointerDown={(e) => {
+        if (placingPlant) {
+          e.stopPropagation();
+          commitPlacement(e.point.x, e.point.z);
+          return;
+        }
         if (pending) return;
         select(planter.id);
         drag.onPointerDown(e);
       }}
-      onPointerMove={drag.onPointerMove}
+      onPointerMove={(e) => {
+        if (placingPlant) {
+          e.stopPropagation();
+          setHoverPos([e.point.x, 0, e.point.z]);
+          return;
+        }
+        drag.onPointerMove(e);
+      }}
       onPointerUp={drag.onPointerUp}
       onPointerCancel={drag.onPointerCancel}
     >

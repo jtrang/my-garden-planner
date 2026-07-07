@@ -2,6 +2,8 @@ import { useGarden, type Plant as PlantT } from "@/lib/garden/store";
 import { PlantModel } from "./plants/PlantModels";
 import { PLANT_CATALOG } from "@/lib/garden/plants-catalog";
 import { useGroundDrag } from "./useGroundDrag";
+import { findContainingPlanter } from "@/lib/garden/collision";
+import { usePlacementHover } from "@/lib/garden/placement-hover";
 
 interface Props {
   plant: PlantT;
@@ -17,19 +19,39 @@ export function Plant({ plant }: Props) {
 
   const drag = useGroundDrag(
     () => plant.position,
-    (x, z) => updatePlant(plant.id, { position: [x, plant.position[1], z] }),
+    (x, z) => {
+      const planters = useGarden.getState().planters;
+      if (!findContainingPlanter(x, z, planters)) return; // must stay in a planter
+      updatePlant(plant.id, { position: [x, plant.position[1], z] });
+    },
   );
+
+  const commitPlacement = useGarden((s) => s.commitPlacementAt);
+  const setHoverPos = usePlacementHover((s) => s.setPos);
+  const placingPlant = pending?.kind === "plant";
 
   return (
     <group
       position={plant.position}
       rotation={[0, plant.rotationY, 0]}
       onPointerDown={(e) => {
+        if (placingPlant) {
+          e.stopPropagation();
+          commitPlacement(e.point.x, e.point.z);
+          return;
+        }
         if (pending) return;
         select(plant.id);
         drag.onPointerDown(e);
       }}
-      onPointerMove={drag.onPointerMove}
+      onPointerMove={(e) => {
+        if (placingPlant) {
+          e.stopPropagation();
+          setHoverPos([e.point.x, 0, e.point.z]);
+          return;
+        }
+        drag.onPointerMove(e);
+      }}
       onPointerUp={drag.onPointerUp}
       onPointerCancel={drag.onPointerCancel}
     >
