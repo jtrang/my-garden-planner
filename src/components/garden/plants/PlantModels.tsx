@@ -33,14 +33,16 @@ export function PlantModel({ species, seed = species }: Props) {
       return <Tomato seed={seed} />;
     case "basil":
       return <Basil seed={seed} />;
-    case "lavender":
-      return <Lavender seed={seed} />;
+    case "bushBeans":
+      return <BushBeans seed={seed} />;
     case "strawberry":
       return <Strawberry seed={seed} />;
     case "pepper":
       return <Pepper seed={seed} />;
-    case "fruitTree":
-      return <FruitTree seed={seed} />;
+    case "romaine":
+      return <Romaine seed={seed} />;
+    default:
+      return null;
   }
 }
 
