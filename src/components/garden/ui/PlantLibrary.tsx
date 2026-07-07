@@ -3,11 +3,17 @@ import { PLANT_LIST } from "@/lib/garden/plants-catalog";
 import { formatLength } from "@/lib/garden/units";
 
 export function PlantLibrary() {
-  const addPlanter = useGarden((s) => s.addPlanter);
-  const addPlant = useGarden((s) => s.addPlant);
+  const startPlacement = useGarden((s) => s.startPlacement);
+  const cancelPlacement = useGarden((s) => s.cancelPlacement);
+  const pending = useGarden((s) => s.pending);
   const units = useGarden((s) => s.units);
   const transformMode = useGarden((s) => s.transformMode);
   const setTransformMode = useGarden((s) => s.setTransformMode);
+
+  const isPending = (test: (p: NonNullable<typeof pending>) => boolean) =>
+    !!pending && test(pending);
+
+  const activeCls = "ring-2 ring-stone-800 bg-stone-100";
 
   return (
     <aside className="flex w-64 flex-col gap-4 border-r border-stone-300 bg-stone-50 p-3 overflow-y-auto">
@@ -31,21 +37,36 @@ export function PlantLibrary() {
         </div>
       </section>
 
+      {pending && (
+        <div className="rounded-md border border-stone-400 bg-stone-100 p-2 text-[11px] text-stone-700">
+          <div className="mb-1 font-medium text-stone-800">Placement mode</div>
+          Hover over the garden and click to place. Press{" "}
+          <kbd className="rounded border border-stone-400 bg-white px-1">Esc</kbd>{" "}
+          to cancel.
+          <button
+            onClick={cancelPlacement}
+            className="mt-2 w-full rounded border border-stone-400 bg-white px-2 py-1 hover:bg-stone-200"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
       <section>
         <h2 className="mb-2 font-display text-xs font-semibold uppercase tracking-wider text-stone-500">
           Add planter
         </h2>
         <div className="grid grid-cols-2 gap-2">
           <button
-            onClick={() => addPlanter("rect")}
-            className="flex flex-col items-center gap-1 rounded-md border border-stone-300 bg-white p-3 text-xs text-stone-700 hover:border-stone-500 hover:bg-stone-100"
+            onClick={() => startPlacement({ kind: "planter", shape: "rect" })}
+            className={`flex flex-col items-center gap-1 rounded-md border border-stone-300 bg-white p-3 text-xs text-stone-700 hover:border-stone-500 hover:bg-stone-100 ${isPending((p) => p.kind === "planter" && p.shape === "rect") ? activeCls : ""}`}
           >
             <div className="h-10 w-12 rounded-sm bg-[#b5613a]" />
             Rectangular
           </button>
           <button
-            onClick={() => addPlanter("circle")}
-            className="flex flex-col items-center gap-1 rounded-md border border-stone-300 bg-white p-3 text-xs text-stone-700 hover:border-stone-500 hover:bg-stone-100"
+            onClick={() => startPlacement({ kind: "planter", shape: "circle" })}
+            className={`flex flex-col items-center gap-1 rounded-md border border-stone-300 bg-white p-3 text-xs text-stone-700 hover:border-stone-500 hover:bg-stone-100 ${isPending((p) => p.kind === "planter" && p.shape === "circle") ? activeCls : ""}`}
           >
             <div className="h-10 w-10 rounded-full bg-[#b5613a]" />
             Circular
@@ -58,14 +79,14 @@ export function PlantLibrary() {
           Plants
         </h2>
         <p className="mb-2 text-[11px] text-stone-500">
-          Click to add. If a planter is selected, the plant will be placed inside it.
+          Click a plant, then hover over the garden or a planter and click to drop it.
         </p>
         <div className="flex flex-col gap-1.5">
           {PLANT_LIST.map((p) => (
             <button
               key={p.id}
-              onClick={() => addPlant(p.id)}
-              className="flex items-center gap-3 rounded-md border border-stone-300 bg-white p-2 text-left text-xs hover:border-stone-500 hover:bg-stone-100"
+              onClick={() => startPlacement({ kind: "plant", species: p.id })}
+              className={`flex items-center gap-3 rounded-md border border-stone-300 bg-white p-2 text-left text-xs hover:border-stone-500 hover:bg-stone-100 ${isPending((pp) => pp.kind === "plant" && pp.species === p.id) ? activeCls : ""}`}
             >
               <div
                 className="h-8 w-8 shrink-0 rounded-full"
@@ -84,3 +105,4 @@ export function PlantLibrary() {
     </aside>
   );
 }
+
