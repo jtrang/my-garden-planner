@@ -7,6 +7,7 @@ import { Ground } from "./Ground";
 import { Sun } from "./Sun";
 import { Planter } from "./Planter";
 import { Plant } from "./Plant";
+import { PlacementPreview } from "./PlacementPreview";
 
 export function Scene() {
   const planters = useGarden((s) => s.planters);
