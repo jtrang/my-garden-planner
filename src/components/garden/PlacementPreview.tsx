@@ -108,8 +108,12 @@ export function PlacementPreview() {
 
 function ghostRadius(pending: NonNullable<ReturnType<typeof useGarden.getState>["pending"]>) {
   if (pending.kind === "plant") return PLANT_CATALOG[pending.species].footprintRadius;
-  if (pending.shape === "circle") return 0.4;
-  return Math.hypot(0.8, 0.5) / 2;
+  if (pending.kind === "planter") {
+    if (pending.shape === "circle") return 0.4;
+    return Math.hypot(0.8, 0.5) / 2;
+  }
+  // structure: bounding radius = half length
+  return 1.0;
 }
 
 function Ghost({
@@ -119,6 +123,7 @@ function Ghost({
   invalid: boolean;
   pending: NonNullable<ReturnType<typeof useGarden.getState>["pending"]>;
 }) {
+  const col = invalid ? GHOST_BAD : "#b5613a";
   if (pending.kind === "plant") {
     return (
       <group>
@@ -126,9 +131,25 @@ function Ghost({
       </group>
     );
   }
+  if (pending.kind === "structure") {
+    // simple translucent slab preview
+    const structCol =
+      invalid
+        ? GHOST_BAD
+        : pending.variant === "wall"
+          ? "#c9c1b0"
+          : pending.variant === "fenceWood"
+            ? "#8a5a34"
+            : "#9fb7c5";
+    return (
+      <mesh position={[0, 0.6, 0]}>
+        <boxGeometry args={[2, 1.2, 0.12]} />
+        <meshStandardMaterial color={structCol} transparent opacity={0.55} />
+      </mesh>
+    );
+  }
   const shape = pending.shape;
   const h = 0.4;
-  const col = invalid ? GHOST_BAD : "#b5613a";
   if (shape === "circle") {
     return (
       <mesh position={[0, h / 2, 0]}>
