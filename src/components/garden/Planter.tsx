@@ -3,6 +3,7 @@ import { useRef } from "react";
 import type { Group } from "three";
 import { useGroundDrag } from "./useGroundDrag";
 import { planterOverlaps } from "@/lib/garden/collision";
+import { usePlacementHover } from "@/lib/garden/placement-hover";
 
 interface Props {
   planter: PlanterT;
