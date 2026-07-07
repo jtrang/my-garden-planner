@@ -26,9 +26,22 @@ export interface Plant {
 
 export type CameraView = "perspective" | "top" | "front";
 
+export type StructureVariant = "wall" | "fenceWood" | "fenceGlass";
+
+export interface Structure {
+  id: string;
+  variant: StructureVariant;
+  length: number; // along local X
+  height: number;
+  thickness: number;
+  position: [number, number, number]; // base y = 0
+  rotationY: number;
+}
+
 export type Pending =
   | { kind: "planter"; shape: PlanterShape }
-  | { kind: "plant"; species: PlantSpecies };
+  | { kind: "plant"; species: PlantSpecies }
+  | { kind: "structure"; variant: StructureVariant };
 
 interface GardenState {
   garden: { width: number; depth: number };
@@ -36,6 +49,7 @@ interface GardenState {
   units: Units;
   planters: Planter[];
   plants: Plant[];
+  structures: Structure[];
   selectedId: string | null;
   cameraView: CameraView;
   transformMode: "translate" | "rotate";
@@ -49,12 +63,22 @@ interface GardenState {
   commitPlacementAt: (x: number, z: number) => void;
   updatePlanter: (id: string, patch: Partial<Planter>) => void;
   updatePlant: (id: string, patch: Partial<Plant>) => void;
+  updateStructure: (id: string, patch: Partial<Structure>) => void;
   deleteSelected: () => void;
   select: (id: string | null) => void;
   setCameraView: (v: CameraView) => void;
   setTransformMode: (m: "translate" | "rotate") => void;
   clearAll: () => void;
 }
+
+export const STRUCTURE_DEFAULTS: Record<
+  StructureVariant,
+  { length: number; height: number; thickness: number; label: string }
+> = {
+  wall: { length: 2, height: 1.8, thickness: 0.15, label: "Wall" },
+  fenceWood: { length: 2, height: 1.2, thickness: 0.05, label: "Wood fence" },
+  fenceGlass: { length: 2, height: 1.1, thickness: 0.04, label: "Glass fence" },
+};
 
 const uid = () => Math.random().toString(36).slice(2, 9);
 
