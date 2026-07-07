@@ -26,16 +26,32 @@ export function Plant({ plant }: Props) {
     },
   );
 
+  const commitPlacement = useGarden((s) => s.commitPlacementAt);
+  const setHoverPos = usePlacementHover((s) => s.setPos);
+  const placingPlant = pending?.kind === "plant";
+
   return (
     <group
       position={plant.position}
       rotation={[0, plant.rotationY, 0]}
       onPointerDown={(e) => {
+        if (placingPlant) {
+          e.stopPropagation();
+          commitPlacement(e.point.x, e.point.z);
+          return;
+        }
         if (pending) return;
         select(plant.id);
         drag.onPointerDown(e);
       }}
-      onPointerMove={drag.onPointerMove}
+      onPointerMove={(e) => {
+        if (placingPlant) {
+          e.stopPropagation();
+          setHoverPos([e.point.x, 0, e.point.z]);
+          return;
+        }
+        drag.onPointerMove(e);
+      }}
       onPointerUp={drag.onPointerUp}
       onPointerCancel={drag.onPointerCancel}
     >
