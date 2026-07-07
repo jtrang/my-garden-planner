@@ -69,44 +69,57 @@ export const useGarden = create<GardenState>()(
       selectedId: null,
       cameraView: "perspective",
       transformMode: "translate",
+      pending: null,
 
       setGarden: (g) => set({ garden: g }),
       setSunTime: (t) => set({ sunTime: t }),
       setUnits: (u) => set({ units: u }),
 
-      addPlanter: (shape) => {
+      startPlacement: (pending) => set({ pending }),
+      cancelPlacement: () => set({ pending: null }),
+
+      commitPlacementAt: (x, z) => {
+        const pending = get().pending;
+        if (!pending) return;
         const id = uid();
-        const planter: Planter = {
-          id,
-          shape,
-          width: shape === "circle" ? 0.4 : 0.8,
-          depth: shape === "circle" ? 0.4 : 0.5,
-          height: 0.4,
-          position: [0, 0, 0],
-          rotationY: 0,
-        };
-        set((s) => ({ planters: [...s.planters, planter], selectedId: id }));
+        if (pending.kind === "planter") {
+          const shape = pending.shape;
+          const planter: Planter = {
+            id,
+            shape,
+            width: shape === "circle" ? 0.4 : 0.8,
+            depth: shape === "circle" ? 0.4 : 0.5,
+            height: 0.4,
+            position: [x, 0, z],
+            rotationY: 0,
+          };
+          set((s) => ({
+            planters: [...s.planters, planter],
+            selectedId: id,
+            pending: null,
+          }));
+        } else {
+          const plant: Plant = {
+            id,
+            species: pending.species,
+            plantedInId: null,
+            position: [x, 0, z],
+            rotationY: 0,
+          };
+          set((s) => ({
+            plants: [...s.plants, plant],
+            selectedId: id,
+            pending: null,
+          }));
+          // trigger snap-to-planter logic
+          get().updatePlant(id, { position: [x, 0, z] });
+        }
       },
 
       updatePlanter: (id, patch) =>
         set((s) => ({
           planters: s.planters.map((p) => (p.id === id ? { ...p, ...patch } : p)),
         })),
-
-      addPlant: (species) => {
-        const id = uid();
-        // place inside selected planter if it's a planter
-        const sel = get().selectedId;
-        const planter = get().planters.find((p) => p.id === sel);
-        let position: [number, number, number] = [0, 0, 0];
-        let plantedInId: string | null = null;
-        if (planter) {
-          position = [planter.position[0], planter.height - 0.02, planter.position[2]];
-          plantedInId = planter.id;
-        }
-        const plant: Plant = { id, species, plantedInId, position, rotationY: 0 };
-        set((s) => ({ plants: [...s.plants, plant], selectedId: id }));
-      },
 
       updatePlant: (id, patch) =>
         set((s) => ({
