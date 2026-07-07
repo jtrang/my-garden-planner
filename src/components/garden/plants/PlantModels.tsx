@@ -147,47 +147,66 @@ function Basil({ seed }: { seed: string }) {
   );
 }
 
-/* ---------- Lavender: gray-green mound with tall flower spikes ---------- */
-function Lavender({ seed }: { seed: string }) {
-  const s = PLANT_CATALOG.lavender;
-  const spikes = useMemo(() => {
+/* ---------- Bush beans: compact bush with drooping pods ---------- */
+function BushBeans({ seed }: { seed: string }) {
+  const s = PLANT_CATALOG.bushBeans;
+  const leaves = useMemo(() => {
     const rng = makeRng(seed);
-    return Array.from({ length: 22 }).map(() => {
-      const a = rng() * Math.PI * 2;
-      const r = s.footprintRadius * (0.2 + rng() * 0.75);
-      return { a, r, len: 0.22 + rng() * 0.12, tilt: (rng() - 0.5) * 0.3 };
-    });
+    return Array.from({ length: 16 }).map(() => ({
+      a: rng() * Math.PI * 2,
+      r: s.footprintRadius * (0.25 + rng() * 0.7),
+      y: s.height * (0.25 + rng() * 0.55),
+      size: 0.07 + rng() * 0.04,
+      tilt: 0.2 + rng() * 0.4,
+      tone: LEAF_GREENS[Math.floor(rng() * LEAF_GREENS.length)],
+    }));
+  }, [seed, s]);
+  const pods = useMemo(() => {
+    const rng = makeRng(seed + "p");
+    return Array.from({ length: 8 }).map(() => ({
+      a: rng() * Math.PI * 2,
+      r: s.footprintRadius * (0.3 + rng() * 0.55),
+      y: s.height * (0.25 + rng() * 0.35),
+      len: 0.08 + rng() * 0.04,
+      tilt: (rng() - 0.5) * 0.5,
+    }));
   }, [seed, s]);
 
   return (
     <group>
-      {/* mound */}
-      <mesh position={[0, s.height * 0.28, 0]} scale={[1, 0.6, 1]} castShadow>
-        <sphereGeometry args={[s.footprintRadius * 0.95, 16, 12]} />
+      {/* base foliage mound */}
+      <mesh position={[0, s.height * 0.28, 0]} scale={[1, 0.7, 1]} castShadow>
+        <sphereGeometry args={[s.footprintRadius * 0.85, 12, 10]} />
         <meshStandardMaterial color={s.foliage} roughness={0.95} />
       </mesh>
-      {spikes.map((sp, i) => {
-        const x = Math.cos(sp.a) * sp.r;
-        const z = Math.sin(sp.a) * sp.r;
-        const stemBase: [number, number, number] = [x, s.height * 0.28, z];
-        return (
-          <group key={i} position={stemBase} rotation={[sp.tilt, sp.a, sp.tilt]}>
-            {/* stem */}
-            <mesh position={[0, sp.len / 2, 0]} castShadow>
-              <cylinderGeometry args={[0.004, 0.005, sp.len, 5]} />
-              <meshStandardMaterial color="#7a8a5c" roughness={0.9} />
-            </mesh>
-            {/* flower spike (taper) */}
-            <mesh position={[0, sp.len + 0.06, 0]} castShadow>
-              <coneGeometry args={[0.022, 0.14, 7]} />
-              <meshStandardMaterial color={s.accent} roughness={0.7} />
-            </mesh>
-          </group>
-        );
-      })}
+      {leaves.map((l, i) => (
+        <mesh
+          key={i}
+          position={[Math.cos(l.a) * l.r, l.y, Math.sin(l.a) * l.r]}
+          rotation={[l.tilt * Math.cos(l.a), -l.a, l.tilt * Math.sin(l.a)]}
+          scale={[1.3, 0.5, 1]}
+          castShadow
+        >
+          <sphereGeometry args={[l.size, 10, 8]} />
+          <meshStandardMaterial color={l.tone} roughness={0.9} />
+        </mesh>
+      ))}
+      {pods.map((p, i) => (
+        <group
+          key={i}
+          position={[Math.cos(p.a) * p.r, p.y, Math.sin(p.a) * p.r]}
+          rotation={[p.tilt, p.a, Math.PI / 2.3]}
+        >
+          <mesh position={[0, -p.len / 2, 0]} scale={[0.35, 1, 0.35]} castShadow>
+            <sphereGeometry args={[p.len / 1.6, 10, 8]} />
+            <meshStandardMaterial color={s.accent} roughness={0.6} />
+          </mesh>
+        </group>
+      ))}
     </group>
   );
 }
+
 
 /* ---------- Strawberry: trifoliate leaves with berries ---------- */
 function Strawberry({ seed }: { seed: string }) {
