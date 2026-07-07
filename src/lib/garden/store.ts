@@ -90,6 +90,7 @@ export const useGarden = create<GardenState>()(
       units: "metric",
       planters: [],
       plants: [],
+      structures: [],
       selectedId: null,
       cameraView: "perspective",
       transformMode: "translate",
