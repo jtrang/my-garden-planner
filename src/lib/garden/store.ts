@@ -225,12 +225,20 @@ export const useGarden = create<GardenState>()(
           }),
         })),
 
+      updateStructure: (id, patch) =>
+        set((s) => ({
+          structures: s.structures.map((st) =>
+            st.id === id ? { ...st, ...patch } : st,
+          ),
+        })),
+
       deleteSelected: () => {
         const id = get().selectedId;
         if (!id) return;
         set((s) => ({
           planters: s.planters.filter((p) => p.id !== id),
           plants: s.plants.filter((p) => p.id !== id && p.plantedInId !== id),
+          structures: s.structures.filter((st) => st.id !== id),
           selectedId: null,
         }));
       },
@@ -239,7 +247,7 @@ export const useGarden = create<GardenState>()(
       setCameraView: (v) => set({ cameraView: v }),
       setTransformMode: (m) => set({ transformMode: m }),
       clearAll: () =>
-        set({ planters: [], plants: [], selectedId: null }),
+        set({ planters: [], plants: [], structures: [], selectedId: null }),
     }),
     {
       name: "garden-planner-v1",
