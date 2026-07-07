@@ -7,11 +7,13 @@ import { Ground } from "./Ground";
 import { Sun } from "./Sun";
 import { Planter } from "./Planter";
 import { Plant } from "./Plant";
+import { Structure } from "./Structure";
 import { PlacementPreview } from "./PlacementPreview";
 
 export function Scene() {
   const planters = useGarden((s) => s.planters);
   const plants = useGarden((s) => s.plants);
+  const structures = useGarden((s) => s.structures);
   const cameraView = useGarden((s) => s.cameraView);
 
   return (
