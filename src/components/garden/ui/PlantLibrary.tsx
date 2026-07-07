@@ -150,3 +150,34 @@ export function PlantLibrary() {
   );
 }
 
+function StructureButton({
+  label,
+  sub,
+  preview,
+  active,
+  onClick,
+}: {
+  variant: string;
+  label: string;
+  sub: string;
+  preview: React.ReactNode;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-3 rounded-md border border-stone-300 bg-white p-2 text-left text-xs hover:border-stone-500 hover:bg-stone-100 ${active ? "ring-2 ring-stone-800 bg-stone-100" : ""}`}
+    >
+      <div className="flex h-8 w-10 items-center justify-center rounded bg-stone-50">
+        {preview}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="font-medium text-stone-800">{label}</div>
+        <div className="text-[10px] text-stone-500">{sub}</div>
+      </div>
+    </button>
+  );
+}
+
+
