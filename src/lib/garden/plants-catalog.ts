@@ -1,10 +1,10 @@
 export type PlantSpecies =
   | "tomato"
   | "basil"
-  | "lavender"
+  | "bushBeans"
   | "strawberry"
   | "pepper"
-  | "fruitTree";
+  | "romaine";
 
 export interface PlantSpec {
   id: PlantSpecies;
@@ -36,14 +36,14 @@ export const PLANT_CATALOG: Record<PlantSpecies, PlantSpec> = {
     accent: "#7aa05a",
     description: "Bushy culinary herb.",
   },
-  lavender: {
-    id: "lavender",
-    name: "Lavender",
-    footprintRadius: 0.35,
-    height: 0.6,
-    foliage: "#8aa67a",
-    accent: "#9b86c4",
-    description: "Mediterranean perennial.",
+  bushBeans: {
+    id: "bushBeans",
+    name: "Bush beans",
+    footprintRadius: 0.22,
+    height: 0.5,
+    foliage: "#6d8f4a",
+    accent: "#c8b96a",
+    description: "Compact bush bean plant with hanging pods.",
   },
   strawberry: {
     id: "strawberry",
@@ -63,14 +63,14 @@ export const PLANT_CATALOG: Record<PlantSpecies, PlantSpec> = {
     accent: "#e8a93a",
     description: "Bell or chili pepper.",
   },
-  fruitTree: {
-    id: "fruitTree",
-    name: "Dwarf fruit tree",
-    footprintRadius: 1.0,
-    height: 2.8,
-    foliage: "#6b8c52",
-    accent: "#d94a3a",
-    description: "Dwarf apple or citrus.",
+  romaine: {
+    id: "romaine",
+    name: "Romaine lettuce",
+    footprintRadius: 0.18,
+    height: 0.3,
+    foliage: "#8fb15a",
+    accent: "#c9dc8a",
+    description: "Upright romaine lettuce head.",
   },
 };
 
