@@ -28,13 +28,28 @@ export function PlacementPreview() {
 
   if (!pending) return null;
 
-  // Only planter placements are blocked by collisions; plants can share space.
-  const invalid =
-    pending.kind === "planter" &&
-    planterOverlaps(
-      { ...newPlanterFootprint(pending.shape), x: pos[0], z: pos[2] },
-      planters,
-    );
+  // Planters can't overlap; plants must sit inside a planter.
+  let invalid = false;
+  let invalidMessage = "";
+  if (pending.kind === "planter") {
+    if (
+      planterOverlaps(
+        { ...newPlanterFootprint(pending.shape), x: pos[0], z: pos[2] },
+        planters,
+      )
+    ) {
+      invalid = true;
+      invalidMessage = "Overlaps another planter";
+    }
+  } else {
+    if (!findContainingPlanter(pos[0], pos[2], planters)) {
+      invalid = true;
+      invalidMessage =
+        planters.length === 0
+          ? "Add a planter first"
+          : "Plants must go inside a planter";
+    }
+  }
 
   const color = invalid ? GHOST_BAD : GHOST_OK;
 
