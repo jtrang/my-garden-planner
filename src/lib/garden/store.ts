@@ -117,9 +117,39 @@ export const useGarden = create<GardenState>()(
       },
 
       updatePlanter: (id, patch) =>
-        set((s) => ({
-          planters: s.planters.map((p) => (p.id === id ? { ...p, ...patch } : p)),
-        })),
+        set((s) => {
+          const prev = s.planters.find((p) => p.id === id);
+          if (!prev) return s;
+          const next = { ...prev, ...patch };
+          const dx = next.position[0] - prev.position[0];
+          const dz = next.position[2] - prev.position[2];
+          const dRot = next.rotationY - prev.rotationY;
+          const moved = dx !== 0 || dz !== 0 || dRot !== 0;
+          return {
+            planters: s.planters.map((p) => (p.id === id ? next : p)),
+            plants: moved
+              ? s.plants.map((pl) => {
+                  if (pl.plantedInId !== id) return pl;
+                  // rotate the local offset around the planter center, then translate
+                  const lx = pl.position[0] - prev.position[0];
+                  const lz = pl.position[2] - prev.position[2];
+                  const cos = Math.cos(dRot);
+                  const sin = Math.sin(dRot);
+                  const rx = lx * cos - lz * sin;
+                  const rz = lx * sin + lz * cos;
+                  return {
+                    ...pl,
+                    position: [
+                      next.position[0] + rx,
+                      pl.position[1],
+                      next.position[2] + rz,
+                    ],
+                    rotationY: pl.rotationY + dRot,
+                  };
+                })
+              : s.plants,
+          };
+        }),
 
       updatePlant: (id, patch) =>
         set((s) => ({
