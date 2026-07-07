@@ -1,6 +1,7 @@
 import { useGarden, type Planter as PlanterT } from "@/lib/garden/store";
 import { useRef } from "react";
 import type { Group } from "three";
+import { useGroundDrag } from "./useGroundDrag";
 
 interface Props {
   planter: PlanterT;
@@ -11,9 +12,16 @@ const SOIL = "#3d2a1a";
 
 export function Planter({ planter }: Props) {
   const select = useGarden((s) => s.select);
+  const updatePlanter = useGarden((s) => s.updatePlanter);
+  const pending = useGarden((s) => s.pending);
   const selectedId = useGarden((s) => s.selectedId);
   const ref = useRef<Group>(null);
   const isSelected = selectedId === planter.id;
+
+  const drag = useGroundDrag(
+    () => planter.position,
+    (x, z) => updatePlanter(planter.id, { position: [x, 0, z] }),
+  );
 
   const wallT = 0.03;
   const h = planter.height;
@@ -24,10 +32,15 @@ export function Planter({ planter }: Props) {
       position={planter.position}
       rotation={[0, planter.rotationY, 0]}
       onPointerDown={(e) => {
-        e.stopPropagation();
+        if (pending) return;
         select(planter.id);
+        drag.onPointerDown(e);
       }}
+      onPointerMove={drag.onPointerMove}
+      onPointerUp={drag.onPointerUp}
+      onPointerCancel={drag.onPointerCancel}
     >
+
       {planter.shape === "rect" ? (
         <>
           {/* outer */}
