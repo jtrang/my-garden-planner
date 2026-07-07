@@ -1,4 +1,4 @@
-import { useGarden } from "@/lib/garden/store";
+import { useGarden, STRUCTURE_DEFAULTS } from "@/lib/garden/store";
 import { PLANT_CATALOG } from "@/lib/garden/plants-catalog";
 import { displayToMeters, metersToDisplay, unitLabel } from "@/lib/garden/units";
 import { Button } from "@/components/ui/button";
@@ -7,15 +7,18 @@ export function Inspector() {
   const selectedId = useGarden((s) => s.selectedId);
   const planters = useGarden((s) => s.planters);
   const plants = useGarden((s) => s.plants);
+  const structures = useGarden((s) => s.structures);
   const garden = useGarden((s) => s.garden);
   const setGarden = useGarden((s) => s.setGarden);
   const updatePlanter = useGarden((s) => s.updatePlanter);
+  const updateStructure = useGarden((s) => s.updateStructure);
   const deleteSelected = useGarden((s) => s.deleteSelected);
   const units = useGarden((s) => s.units);
   const ul = unitLabel(units);
 
   const planter = planters.find((p) => p.id === selectedId);
   const plant = plants.find((p) => p.id === selectedId);
+  const structure = structures.find((s) => s.id === selectedId);
 
   return (
     <aside className="flex w-72 flex-col gap-4 border-l border-stone-300 bg-stone-50 p-3 overflow-y-auto">
