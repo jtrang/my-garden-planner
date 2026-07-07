@@ -76,6 +76,50 @@ export function PlantLibrary() {
 
       <section>
         <h2 className="mb-2 font-display text-xs font-semibold uppercase tracking-wider text-stone-500">
+          Walls &amp; fences
+        </h2>
+        <div className="flex flex-col gap-1.5">
+          <StructureButton
+            variant="wall"
+            label="Wall"
+            sub="Solid masonry"
+            preview={<div className="h-6 w-8 rounded-sm bg-[#cfc4ac] border-t-2 border-[#b3a785]" />}
+            active={isPending((p) => p.kind === "structure" && p.variant === "wall")}
+            onClick={() => startPlacement({ kind: "structure", variant: "wall" })}
+          />
+          <StructureButton
+            variant="fenceWood"
+            label="Wood fence"
+            sub="Pickets on posts"
+            preview={
+              <div className="flex h-6 w-8 items-end gap-[2px]">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <div key={i} className="h-full flex-1 rounded-sm bg-[#8a5a34]" />
+                ))}
+              </div>
+            }
+            active={isPending((p) => p.kind === "structure" && p.variant === "fenceWood")}
+            onClick={() => startPlacement({ kind: "structure", variant: "fenceWood" })}
+          />
+          <StructureButton
+            variant="fenceGlass"
+            label="Glass fence"
+            sub="Metal posts + glass"
+            preview={
+              <div className="flex h-6 w-8 items-stretch gap-[2px]">
+                <div className="w-[2px] bg-[#8a8f96]" />
+                <div className="flex-1 rounded-sm bg-[#c8dbe4]/70 border border-[#8a8f96]" />
+                <div className="w-[2px] bg-[#8a8f96]" />
+              </div>
+            }
+            active={isPending((p) => p.kind === "structure" && p.variant === "fenceGlass")}
+            onClick={() => startPlacement({ kind: "structure", variant: "fenceGlass" })}
+          />
+        </div>
+      </section>
+
+      <section>
+        <h2 className="mb-2 font-display text-xs font-semibold uppercase tracking-wider text-stone-500">
           Plants
         </h2>
         <p className="mb-2 text-[11px] text-stone-500">
