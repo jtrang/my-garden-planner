@@ -67,14 +67,17 @@ function SelectionTransformer() {
   const selectedId = useGarden((s) => s.selectedId);
   const planters = useGarden((s) => s.planters);
   const plants = useGarden((s) => s.plants);
+  const structures = useGarden((s) => s.structures);
   const updatePlanter = useGarden((s) => s.updatePlanter);
   const updatePlant = useGarden((s) => s.updatePlant);
+  const updateStructure = useGarden((s) => s.updateStructure);
   const mode = useGarden((s) => s.transformMode);
   const proxyRef = useRef<Mesh>(null);
 
   const selectedPlanter = planters.find((p) => p.id === selectedId);
   const selectedPlant = plants.find((p) => p.id === selectedId);
-  const target = selectedPlanter ?? selectedPlant;
+  const selectedStructure = structures.find((s) => s.id === selectedId);
+  const target = selectedPlanter ?? selectedPlant ?? selectedStructure;
 
   // sync proxy to current selection position
   useEffect(() => {
@@ -96,6 +99,11 @@ function SelectionTransformer() {
     } else if (selectedPlant) {
       updatePlant(selectedPlant.id, {
         position: [obj.position.x, obj.position.y, obj.position.z],
+        rotationY: obj.rotation.y,
+      });
+    } else if (selectedStructure) {
+      updateStructure(selectedStructure.id, {
+        position: [obj.position.x, 0, obj.position.z],
         rotationY: obj.rotation.y,
       });
     }
