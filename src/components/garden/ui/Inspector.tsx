@@ -1,4 +1,4 @@
-import { useGarden } from "@/lib/garden/store";
+import { useGarden, STRUCTURE_DEFAULTS } from "@/lib/garden/store";
 import { PLANT_CATALOG } from "@/lib/garden/plants-catalog";
 import { displayToMeters, metersToDisplay, unitLabel } from "@/lib/garden/units";
 import { Button } from "@/components/ui/button";
@@ -7,15 +7,18 @@ export function Inspector() {
   const selectedId = useGarden((s) => s.selectedId);
   const planters = useGarden((s) => s.planters);
   const plants = useGarden((s) => s.plants);
+  const structures = useGarden((s) => s.structures);
   const garden = useGarden((s) => s.garden);
   const setGarden = useGarden((s) => s.setGarden);
   const updatePlanter = useGarden((s) => s.updatePlanter);
+  const updateStructure = useGarden((s) => s.updateStructure);
   const deleteSelected = useGarden((s) => s.deleteSelected);
   const units = useGarden((s) => s.units);
   const ul = unitLabel(units);
 
   const planter = planters.find((p) => p.id === selectedId);
   const plant = plants.find((p) => p.id === selectedId);
+  const structure = structures.find((s) => s.id === selectedId);
 
   return (
     <aside className="flex w-72 flex-col gap-4 border-l border-stone-300 bg-stone-50 p-3 overflow-y-auto">
@@ -39,11 +42,77 @@ export function Inspector() {
         </div>
       </section>
 
-      {!planter && !plant && (
+      {!planter && !plant && !structure && (
         <div className="rounded-md border border-dashed border-stone-300 bg-white p-4 text-center text-xs text-stone-500">
-          Select a planter or plant to edit its dimensions and position.
+          Select a planter, plant, or structure to edit its dimensions and position.
         </div>
       )}
+
+      {structure && (
+        <section>
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="font-display text-xs font-semibold uppercase tracking-wider text-stone-500">
+              {STRUCTURE_DEFAULTS[structure.variant].label}
+            </h2>
+            <Button variant="ghost" size="sm" onClick={deleteSelected} className="h-6 text-xs text-red-600">
+              Delete
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <NumField
+              label={`Length (${ul})`}
+              value={metersToDisplay(structure.length, units)}
+              step={units === "metric" ? 10 : 3}
+              onChange={(v) =>
+                updateStructure(structure.id, { length: Math.max(0.2, displayToMeters(v, units)) })
+              }
+            />
+            <NumField
+              label={`Height (${ul})`}
+              value={metersToDisplay(structure.height, units)}
+              step={units === "metric" ? 5 : 1}
+              onChange={(v) =>
+                updateStructure(structure.id, { height: Math.max(0.1, displayToMeters(v, units)) })
+              }
+            />
+            <NumField
+              label={`Thickness (${ul})`}
+              value={metersToDisplay(structure.thickness, units)}
+              step={units === "metric" ? 1 : 0.5}
+              onChange={(v) =>
+                updateStructure(structure.id, {
+                  thickness: Math.max(0.02, displayToMeters(v, units)),
+                })
+              }
+            />
+            <NumField
+              label="Rotation (°)"
+              value={+((structure.rotationY * 180) / Math.PI).toFixed(0)}
+              step={5}
+              onChange={(v) => updateStructure(structure.id, { rotationY: (v * Math.PI) / 180 })}
+            />
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+            <NumField
+              label="X position (m)"
+              value={+structure.position[0].toFixed(2)}
+              step={0.1}
+              onChange={(v) =>
+                updateStructure(structure.id, { position: [v, 0, structure.position[2]] })
+              }
+            />
+            <NumField
+              label="Z position (m)"
+              value={+structure.position[2].toFixed(2)}
+              step={0.1}
+              onChange={(v) =>
+                updateStructure(structure.id, { position: [structure.position[0], 0, v] })
+              }
+            />
+          </div>
+        </section>
+      )}
+
 
       {planter && (
         <section>

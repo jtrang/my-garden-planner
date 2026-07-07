@@ -26,9 +26,22 @@ export interface Plant {
 
 export type CameraView = "perspective" | "top" | "front";
 
+export type StructureVariant = "wall" | "fenceWood" | "fenceGlass";
+
+export interface Structure {
+  id: string;
+  variant: StructureVariant;
+  length: number; // along local X
+  height: number;
+  thickness: number;
+  position: [number, number, number]; // base y = 0
+  rotationY: number;
+}
+
 export type Pending =
   | { kind: "planter"; shape: PlanterShape }
-  | { kind: "plant"; species: PlantSpecies };
+  | { kind: "plant"; species: PlantSpecies }
+  | { kind: "structure"; variant: StructureVariant };
 
 interface GardenState {
   garden: { width: number; depth: number };
@@ -36,6 +49,7 @@ interface GardenState {
   units: Units;
   planters: Planter[];
   plants: Plant[];
+  structures: Structure[];
   selectedId: string | null;
   cameraView: CameraView;
   transformMode: "translate" | "rotate";
@@ -49,12 +63,22 @@ interface GardenState {
   commitPlacementAt: (x: number, z: number) => void;
   updatePlanter: (id: string, patch: Partial<Planter>) => void;
   updatePlant: (id: string, patch: Partial<Plant>) => void;
+  updateStructure: (id: string, patch: Partial<Structure>) => void;
   deleteSelected: () => void;
   select: (id: string | null) => void;
   setCameraView: (v: CameraView) => void;
   setTransformMode: (m: "translate" | "rotate") => void;
   clearAll: () => void;
 }
+
+export const STRUCTURE_DEFAULTS: Record<
+  StructureVariant,
+  { length: number; height: number; thickness: number; label: string }
+> = {
+  wall: { length: 2, height: 1.8, thickness: 0.15, label: "Wall" },
+  fenceWood: { length: 2, height: 1.2, thickness: 0.05, label: "Wood fence" },
+  fenceGlass: { length: 2, height: 1.1, thickness: 0.04, label: "Glass fence" },
+};
 
 const uid = () => Math.random().toString(36).slice(2, 9);
 
@@ -66,6 +90,7 @@ export const useGarden = create<GardenState>()(
       units: "metric",
       planters: [],
       plants: [],
+      structures: [],
       selectedId: null,
       cameraView: "perspective",
       transformMode: "translate",
@@ -98,7 +123,7 @@ export const useGarden = create<GardenState>()(
             selectedId: id,
             pending: null,
           }));
-        } else {
+        } else if (pending.kind === "plant") {
           const plant: Plant = {
             id,
             species: pending.species,
@@ -113,6 +138,22 @@ export const useGarden = create<GardenState>()(
           }));
           // trigger snap-to-planter logic
           get().updatePlant(id, { position: [x, 0, z] });
+        } else {
+          const d = STRUCTURE_DEFAULTS[pending.variant];
+          const structure: Structure = {
+            id,
+            variant: pending.variant,
+            length: d.length,
+            height: d.height,
+            thickness: d.thickness,
+            position: [x, 0, z],
+            rotationY: 0,
+          };
+          set((s) => ({
+            structures: [...s.structures, structure],
+            selectedId: id,
+            pending: null,
+          }));
         }
       },
 
@@ -184,12 +225,20 @@ export const useGarden = create<GardenState>()(
           }),
         })),
 
+      updateStructure: (id, patch) =>
+        set((s) => ({
+          structures: s.structures.map((st) =>
+            st.id === id ? { ...st, ...patch } : st,
+          ),
+        })),
+
       deleteSelected: () => {
         const id = get().selectedId;
         if (!id) return;
         set((s) => ({
           planters: s.planters.filter((p) => p.id !== id),
           plants: s.plants.filter((p) => p.id !== id && p.plantedInId !== id),
+          structures: s.structures.filter((st) => st.id !== id),
           selectedId: null,
         }));
       },
@@ -198,7 +247,7 @@ export const useGarden = create<GardenState>()(
       setCameraView: (v) => set({ cameraView: v }),
       setTransformMode: (m) => set({ transformMode: m }),
       clearAll: () =>
-        set({ planters: [], plants: [], selectedId: null }),
+        set({ planters: [], plants: [], structures: [], selectedId: null }),
     }),
     {
       name: "garden-planner-v1",
