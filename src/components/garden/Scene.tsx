@@ -33,6 +33,9 @@ export function Scene() {
         {plants.map((p) => (
           <Plant key={p.id} plant={p} />
         ))}
+        {structures.map((st) => (
+          <Structure key={st.id} structure={st} />
+        ))}
         <SelectionTransformer />
         <PlacementPreview />
         <OrbitControls makeDefault enableDamping dampingFactor={0.1} />
