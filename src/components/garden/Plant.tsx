@@ -3,6 +3,7 @@ import { PlantModel } from "./plants/PlantModels";
 import { PLANT_CATALOG } from "@/lib/garden/plants-catalog";
 import { useGroundDrag } from "./useGroundDrag";
 import { findContainingPlanter } from "@/lib/garden/collision";
+import { usePlacementHover } from "@/lib/garden/placement-hover";
 
 interface Props {
   plant: PlantT;
