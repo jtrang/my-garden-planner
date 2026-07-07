@@ -206,6 +206,23 @@ export const useGarden = create<GardenState>()(
         typeof window !== "undefined" ? localStorage : (undefined as never),
       ),
       skipHydration: true,
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+        // drop plants whose species no longer exists in the catalog
+        const valid = new Set<PlantSpecies>([
+          "tomato",
+          "basil",
+          "bushBeans",
+          "strawberry",
+          "pepper",
+          "romaine",
+        ]);
+        const filtered = state.plants.filter((p) => valid.has(p.species));
+        if (filtered.length !== state.plants.length) {
+          state.plants = filtered;
+          state.selectedId = null;
+        }
+      },
     },
   ),
 );
