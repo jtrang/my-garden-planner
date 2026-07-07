@@ -331,79 +331,66 @@ function Pepper({ seed }: { seed: string }) {
   );
 }
 
-/* ---------- Fruit tree: tapered trunk, layered canopy, fruit ---------- */
-function FruitTree({ seed }: { seed: string }) {
-  const s = PLANT_CATALOG.fruitTree;
-  const trunkH = s.height * 0.42;
-
-  const canopy = useMemo(() => {
+/* ---------- Romaine lettuce: upright open head of long leaves ---------- */
+function Romaine({ seed }: { seed: string }) {
+  const s = PLANT_CATALOG.romaine;
+  const outer = useMemo(() => {
     const rng = makeRng(seed);
-    return Array.from({ length: 9 }).map(() => ({
-      a: rng() * Math.PI * 2,
-      r: s.footprintRadius * (0.15 + rng() * 0.55),
-      y: rng() * s.footprintRadius * 0.9,
-      size: s.footprintRadius * (0.55 + rng() * 0.28),
-      tone: LEAF_GREENS[Math.floor(rng() * LEAF_GREENS.length)],
+    return Array.from({ length: 11 }).map((_, i) => ({
+      a: (i / 11) * Math.PI * 2 + rng() * 0.15,
+      tilt: 0.35 + rng() * 0.2,
+      len: s.height * (0.85 + rng() * 0.15),
+      w: s.footprintRadius * (0.55 + rng() * 0.15),
+      tone: LEAF_GREENS[Math.floor(rng() * 3) + 1],
     }));
   }, [seed, s]);
-  const fruits = useMemo(() => {
-    const rng = makeRng(seed + "f");
-    return Array.from({ length: 12 }).map(() => {
-      const a = rng() * Math.PI * 2;
-      const r = s.footprintRadius * (0.35 + rng() * 0.55);
-      const y = trunkH + s.footprintRadius * (0.3 + rng() * 0.9);
-      return { a, r, y };
-    });
-  }, [seed, s, trunkH]);
+  const inner = useMemo(() => {
+    const rng = makeRng(seed + "i");
+    return Array.from({ length: 7 }).map((_, i) => ({
+      a: (i / 7) * Math.PI * 2 + rng() * 0.2,
+      tilt: 0.15 + rng() * 0.15,
+      len: s.height * (0.55 + rng() * 0.2),
+      w: s.footprintRadius * (0.35 + rng() * 0.15),
+    }));
+  }, [seed, s]);
+
+  const Leaf = ({
+    a,
+    tilt,
+    len,
+    w,
+    tone,
+  }: {
+    a: number;
+    tilt: number;
+    len: number;
+    w: number;
+    tone: string;
+  }) => (
+    <group rotation={[0, a, 0]}>
+      <group rotation={[tilt, 0, 0]}>
+        <mesh position={[0, len / 2, w * 0.35]} scale={[w, len / 2, 0.03]} castShadow>
+          <sphereGeometry args={[1, 10, 10]} />
+          <meshStandardMaterial color={tone} roughness={0.85} />
+        </mesh>
+      </group>
+    </group>
+  );
 
   return (
     <group>
-      {/* trunk (tapered) */}
-      <mesh position={[0, trunkH / 2, 0]} castShadow>
-        <cylinderGeometry args={[0.05, 0.09, trunkH, 10]} />
-        <meshStandardMaterial color={BARK} roughness={0.95} />
+      {/* base */}
+      <mesh position={[0, 0.03, 0]} scale={[1, 0.4, 1]}>
+        <sphereGeometry args={[s.footprintRadius * 0.35, 10, 8]} />
+        <meshStandardMaterial color="#c9dc8a" roughness={0.9} />
       </mesh>
-      {/* root flare */}
-      <mesh position={[0, 0.03, 0]} castShadow>
-        <cylinderGeometry args={[0.09, 0.13, 0.06, 10]} />
-        <meshStandardMaterial color={BARK} roughness={0.95} />
-      </mesh>
-      {/* few visible branches poking through canopy */}
-      {[0, 1, 2].map((i) => {
-        const a = (i / 3) * Math.PI * 2;
-        return (
-          <mesh
-            key={i}
-            position={[Math.cos(a) * 0.15, trunkH + 0.1, Math.sin(a) * 0.15]}
-            rotation={[0, -a, 0.9]}
-            castShadow
-          >
-            <cylinderGeometry args={[0.02, 0.03, 0.5, 6]} />
-            <meshStandardMaterial color={BARK_LIGHT} roughness={0.95} />
-          </mesh>
-        );
-      })}
-      {/* layered canopy */}
-      {canopy.map((c, i) => (
-        <mesh
-          key={i}
-          position={[Math.cos(c.a) * c.r, trunkH + s.footprintRadius * 0.6 + c.y, Math.sin(c.a) * c.r]}
-          castShadow
-        >
-          <sphereGeometry args={[c.size, 14, 12]} />
-          <meshStandardMaterial color={c.tone} roughness={0.95} />
-        </mesh>
+      {outer.map((l, i) => (
+        <Leaf key={`o-${i}`} {...l} />
       ))}
-      {fruits.map((f, i) => (
-        <mesh
-          key={i}
-          position={[Math.cos(f.a) * f.r, f.y, Math.sin(f.a) * f.r]}
-          castShadow
-        >
-          <sphereGeometry args={[0.05, 10, 10]} />
-          <meshStandardMaterial color={s.accent} roughness={0.55} />
-        </mesh>
+      {inner.map((l, i) => (
+        <Leaf key={`i-${i}`} {...l} tone={s.accent} />
       ))}
     </group>
   );
 }
+
