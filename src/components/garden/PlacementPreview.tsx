@@ -87,7 +87,7 @@ export function PlacementPreview() {
           {invalid && (
             <Html center position={[0, 0.6, 0]} distanceFactor={6} zIndexRange={[10, 0]}>
               <div className="pointer-events-none select-none whitespace-nowrap rounded bg-red-600 px-2 py-0.5 text-[11px] font-medium text-white shadow">
-                Overlaps another planter
+                {invalidMessage}
               </div>
             </Html>
           )}
