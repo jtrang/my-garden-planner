@@ -3,7 +3,7 @@ import { Html } from "@react-three/drei";
 import { useGarden } from "@/lib/garden/store";
 import { PlantModel } from "./plants/PlantModels";
 import { PLANT_CATALOG } from "@/lib/garden/plants-catalog";
-import { newPlanterFootprint, planterOverlaps } from "@/lib/garden/collision";
+import { findContainingPlanter, newPlanterFootprint, planterOverlaps } from "@/lib/garden/collision";
 
 const GHOST_OK = "#3a8fd9";
 const GHOST_BAD = "#dc2626";
