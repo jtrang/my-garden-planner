@@ -38,6 +38,8 @@ export function newPlanterFootprint(shape: PlanterShape) {
     width: shape === "circle" ? 0.4 : 0.8,
     depth: shape === "circle" ? 0.4 : 0.5,
   };
+}
+
 
 /** Returns the planter whose footprint contains (x, z), if any. */
 export function findContainingPlanter(x: number, z: number, planters: Planter[]) {
