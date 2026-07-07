@@ -123,7 +123,7 @@ export const useGarden = create<GardenState>()(
             selectedId: id,
             pending: null,
           }));
-        } else {
+        } else if (pending.kind === "plant") {
           const plant: Plant = {
             id,
             species: pending.species,
@@ -138,6 +138,22 @@ export const useGarden = create<GardenState>()(
           }));
           // trigger snap-to-planter logic
           get().updatePlant(id, { position: [x, 0, z] });
+        } else {
+          const d = STRUCTURE_DEFAULTS[pending.variant];
+          const structure: Structure = {
+            id,
+            variant: pending.variant,
+            length: d.length,
+            height: d.height,
+            thickness: d.thickness,
+            position: [x, 0, z],
+            rotationY: 0,
+          };
+          set((s) => ({
+            structures: [...s.structures, structure],
+            selectedId: id,
+            pending: null,
+          }));
         }
       },
 
