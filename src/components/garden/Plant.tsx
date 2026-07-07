@@ -55,7 +55,7 @@ export function Plant({ plant }: Props) {
       onPointerUp={drag.onPointerUp}
       onPointerCancel={drag.onPointerCancel}
     >
-      <PlantModel species={plant.species} />
+      <PlantModel species={plant.species} seed={plant.id} />
       {isSelected && (
         <mesh position={[0, 0.005, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[spec.footprintRadius, spec.footprintRadius + 0.04, 32]} />
