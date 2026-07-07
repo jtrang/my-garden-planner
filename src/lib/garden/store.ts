@@ -26,6 +26,10 @@ export interface Plant {
 
 export type CameraView = "perspective" | "top" | "front";
 
+export type Pending =
+  | { kind: "planter"; shape: PlanterShape }
+  | { kind: "plant"; species: PlantSpecies };
+
 interface GardenState {
   garden: { width: number; depth: number };
   sunTime: number; // 6..20
@@ -35,13 +39,15 @@ interface GardenState {
   selectedId: string | null;
   cameraView: CameraView;
   transformMode: "translate" | "rotate";
+  pending: Pending | null;
 
   setGarden: (g: { width: number; depth: number }) => void;
   setSunTime: (t: number) => void;
   setUnits: (u: Units) => void;
-  addPlanter: (shape: PlanterShape) => void;
+  startPlacement: (pending: Pending) => void;
+  cancelPlacement: () => void;
+  commitPlacementAt: (x: number, z: number) => void;
   updatePlanter: (id: string, patch: Partial<Planter>) => void;
-  addPlant: (species: PlantSpecies) => void;
   updatePlant: (id: string, patch: Partial<Plant>) => void;
   deleteSelected: () => void;
   select: (id: string | null) => void;
