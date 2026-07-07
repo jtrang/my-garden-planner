@@ -2,6 +2,7 @@ import { useGarden, type Planter as PlanterT } from "@/lib/garden/store";
 import { useRef } from "react";
 import type { Group } from "three";
 import { useGroundDrag } from "./useGroundDrag";
+import { planterOverlaps } from "@/lib/garden/collision";
 
 interface Props {
   planter: PlanterT;
@@ -20,8 +21,21 @@ export function Planter({ planter }: Props) {
 
   const drag = useGroundDrag(
     () => planter.position,
-    (x, z) => updatePlanter(planter.id, { position: [x, 0, z] }),
+    (x, z) => {
+      const others = useGarden.getState().planters;
+      if (
+        planterOverlaps(
+          { shape: planter.shape, width: planter.width, depth: planter.depth, x, z },
+          others,
+          planter.id,
+        )
+      ) {
+        return; // refuse move that would overlap
+      }
+      updatePlanter(planter.id, { position: [x, 0, z] });
+    },
   );
+
 
   const wallT = 0.03;
   const h = planter.height;

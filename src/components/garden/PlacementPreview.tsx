@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
+import { Html } from "@react-three/drei";
 import { useGarden } from "@/lib/garden/store";
 import { PlantModel } from "./plants/PlantModels";
 import { PLANT_CATALOG } from "@/lib/garden/plants-catalog";
+import { newPlanterFootprint, planterOverlaps } from "@/lib/garden/collision";
 
-const GHOST = "#3a8fd9";
+const GHOST_OK = "#3a8fd9";
+const GHOST_BAD = "#dc2626";
 
 export function PlacementPreview() {
   const pending = useGarden((s) => s.pending);
   const commit = useGarden((s) => s.commitPlacementAt);
   const cancel = useGarden((s) => s.cancelPlacement);
+  const planters = useGarden((s) => s.planters);
   const [pos, setPos] = useState<[number, number, number]>([0, 0, 0]);
   const [visible, setVisible] = useState(false);
 
@@ -23,6 +27,16 @@ export function PlacementPreview() {
   }, [pending, cancel]);
 
   if (!pending) return null;
+
+  // Only planter placements are blocked by collisions; plants can share space.
+  const invalid =
+    pending.kind === "planter" &&
+    planterOverlaps(
+      { ...newPlanterFootprint(pending.shape), x: pos[0], z: pos[2] },
+      planters,
+    );
+
+  const color = invalid ? GHOST_BAD : GHOST_OK;
 
   return (
     <group>
@@ -39,6 +53,7 @@ export function PlacementPreview() {
         onPointerDown={(e) => {
           if (e.button !== 0) return;
           e.stopPropagation();
+          if (invalid) return;
           commit(e.point.x, e.point.z);
         }}
       >
@@ -48,12 +63,19 @@ export function PlacementPreview() {
 
       {visible && (
         <group position={pos}>
-          <Ghost />
+          <Ghost invalid={invalid} />
           {/* footprint ring */}
           <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
             <ringGeometry args={[ghostRadius() - 0.02, ghostRadius(), 48]} />
-            <meshBasicMaterial color={GHOST} transparent opacity={0.9} />
+            <meshBasicMaterial color={color} transparent opacity={0.9} />
           </mesh>
+          {invalid && (
+            <Html center position={[0, 0.6, 0]} distanceFactor={6} zIndexRange={[10, 0]}>
+              <div className="pointer-events-none select-none whitespace-nowrap rounded bg-red-600 px-2 py-0.5 text-[11px] font-medium text-white shadow">
+                Overlaps another planter
+              </div>
+            </Html>
+          )}
         </group>
       )}
     </group>
@@ -67,7 +89,7 @@ export function PlacementPreview() {
     return Math.hypot(0.8, 0.5) / 2;
   }
 
-  function Ghost() {
+  function Ghost({ invalid }: { invalid: boolean }) {
     if (pending!.kind === "plant") {
       return (
         <group>
@@ -77,18 +99,19 @@ export function PlacementPreview() {
     }
     const shape = pending!.shape;
     const h = 0.4;
+    const col = invalid ? GHOST_BAD : "#b5613a";
     if (shape === "circle") {
       return (
         <mesh position={[0, h / 2, 0]}>
           <cylinderGeometry args={[0.4, 0.34, h, 24]} />
-          <meshStandardMaterial color="#b5613a" transparent opacity={0.55} />
+          <meshStandardMaterial color={col} transparent opacity={0.55} />
         </mesh>
       );
     }
     return (
       <mesh position={[0, h / 2, 0]}>
         <boxGeometry args={[0.8, h, 0.5]} />
-        <meshStandardMaterial color="#b5613a" transparent opacity={0.55} />
+        <meshStandardMaterial color={col} transparent opacity={0.55} />
       </mesh>
     );
   }
