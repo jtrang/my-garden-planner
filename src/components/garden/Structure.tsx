@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import * as THREE from "three";
 import { useGarden, type Structure as StructureT } from "@/lib/garden/store";
 import { useGroundDrag } from "./useGroundDrag";
+import { structureOverlaps } from "@/lib/garden/collision";
 
 // Dithered alpha texture: ~35% of pixels opaque, ~65% transparent.
 // Used as an alphaMap on a customDepthMaterial so the glass panel casts
