@@ -51,6 +51,72 @@ export function Inspector() {
             onChange={(v) => setGarden({ ...garden, depth: units === "metric" ? v : v / 3.28084 })}
           />
         </div>
+
+        <div className="mt-3">
+          <div className="mb-1 text-[10px] uppercase tracking-wider text-stone-500">
+            Ground
+          </div>
+          <div className="mb-2 grid grid-cols-3 gap-1">
+            {(["wood", "concrete", "grass"] as GroundSkin[]).map((s) => {
+              const active = groundStyle.type === "skin" && groundStyle.skin === s;
+              return (
+                <button
+                  key={s}
+                  onClick={() => setGroundStyle({ type: "skin", skin: s })}
+                  className={`rounded border p-1 text-[11px] capitalize hover:border-stone-500 ${
+                    active
+                      ? "border-stone-800 bg-stone-100 ring-1 ring-stone-800"
+                      : "border-stone-300 bg-white text-stone-700"
+                  }`}
+                >
+                  <div
+                    className="mx-auto mb-1 h-6 w-full rounded-sm"
+                    style={{ background: SKIN_PREVIEWS[s] }}
+                  />
+                  {s === "wood" ? "Wood deck" : s}
+                </button>
+              );
+            })}
+          </div>
+          <div className="mb-1 text-[10px] uppercase tracking-wider text-stone-500">
+            Color
+          </div>
+          <div className="flex flex-wrap items-center gap-1">
+            {GROUND_PALETTE.map((c) => {
+              const active = groundStyle.type === "color" && groundStyle.color === c;
+              return (
+                <button
+                  key={c}
+                  aria-label={c}
+                  onClick={() => setGroundStyle({ type: "color", color: c })}
+                  className={`h-6 w-6 rounded-full border ${
+                    active ? "ring-2 ring-stone-800" : "border-stone-300"
+                  }`}
+                  style={{ background: c }}
+                />
+              );
+            })}
+            <label
+              className={`flex h-6 items-center gap-1 rounded border px-1 text-[11px] cursor-pointer ${
+                groundStyle.type === "color" &&
+                !GROUND_PALETTE.includes(groundStyle.color)
+                  ? "border-stone-800 ring-1 ring-stone-800"
+                  : "border-stone-300 bg-white text-stone-700 hover:border-stone-500"
+              }`}
+              title="Custom color"
+            >
+              <input
+                type="color"
+                className="h-4 w-4 cursor-pointer border-0 bg-transparent p-0"
+                value={groundStyle.type === "color" ? groundStyle.color : "#ece5d2"}
+                onChange={(e) =>
+                  setGroundStyle({ type: "color", color: e.target.value })
+                }
+              />
+              Custom
+            </label>
+          </div>
+        </div>
       </section>
 
       {!planter && !plant && !structure && (
