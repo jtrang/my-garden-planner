@@ -91,18 +91,10 @@ export function Structure({ structure }: Props) {
 function WallMesh({ structure }: { structure: StructureT }) {
   const { length: L, height: H, thickness: T } = structure;
   return (
-    <group>
-      {/* main wall */}
-      <mesh position={[0, H / 2, 0]} castShadow receiveShadow>
-        <boxGeometry args={[L, H, T]} />
-        <meshStandardMaterial color="#cfc4ac" roughness={0.95} />
-      </mesh>
-      {/* cap */}
-      <mesh position={[0, H + 0.02, 0]} castShadow receiveShadow>
-        <boxGeometry args={[L + 0.04, 0.04, T + 0.04]} />
-        <meshStandardMaterial color="#b3a785" roughness={0.9} />
-      </mesh>
-    </group>
+    <mesh position={[0, H / 2, 0]} castShadow receiveShadow>
+      <boxGeometry args={[L, H, T]} />
+      <meshStandardMaterial color="#cfc4ac" roughness={0.95} />
+    </mesh>
   );
 }
 
