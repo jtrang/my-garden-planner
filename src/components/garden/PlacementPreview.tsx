@@ -6,6 +6,7 @@ import { PlantModel } from "./plants/PlantModels";
 import { PLANT_CATALOG } from "@/lib/garden/plants-catalog";
 import {
   findContainingPlanter,
+  nearestWallSnap,
   newPlanterFootprint,
   planterOverlaps,
   structureOverlaps,
@@ -53,16 +54,26 @@ export function PlacementPreview() {
         invalidMessage = "Overlaps another object";
       }
     } else if (pending.kind === "structure") {
-      const d = STRUCTURE_DEFAULTS[pending.variant];
-      if (
-        structureOverlaps(
-          { length: d.length, thickness: d.thickness, x: pos[0], z: pos[2] },
-          planters,
-          structures,
-        )
-      ) {
-        invalid = true;
-        invalidMessage = "Overlaps another object";
+      if (pending.variant === "roof") {
+        const snap = nearestWallSnap(pos[0], pos[2], structures);
+        if (!snap) {
+          invalid = true;
+          invalidMessage = structures.some((s) => s.variant === "wall")
+            ? "Move near a wall"
+            : "Add a masonry wall first";
+        }
+      } else {
+        const d = STRUCTURE_DEFAULTS[pending.variant];
+        if (
+          structureOverlaps(
+            { length: d.length, thickness: d.thickness, x: pos[0], z: pos[2] },
+            planters,
+            structures,
+          )
+        ) {
+          invalid = true;
+          invalidMessage = "Overlaps another object";
+        }
       }
     } else {
       if (!findContainingPlanter(pos[0], pos[2], planters)) {
@@ -99,23 +110,62 @@ export function PlacementPreview() {
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
 
-      {pos && (
-        <group position={pos}>
-          <Ghost invalid={invalid} pending={pending} />
-          <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <ringGeometry
-              args={[ghostRadius(pending) - 0.02, ghostRadius(pending), 48]}
-            />
-            <meshBasicMaterial color={color} transparent opacity={0.95} />
-          </mesh>
-          {invalid && (
-            <Html center position={[0, 0.6, 0]} distanceFactor={6}>
-              <div className="pointer-events-none select-none whitespace-nowrap rounded bg-red-600 px-2 py-0.5 text-[11px] font-medium text-white shadow">
-                {invalidMessage}
-              </div>
-            </Html>
-          )}
-        </group>
+      {pos && pending.kind === "structure" && pending.variant === "roof" ? (
+        (() => {
+          const snap = nearestWallSnap(pos[0], pos[2], structures);
+          if (!snap) {
+            return (
+              <group position={pos}>
+                {invalid && (
+                  <Html center position={[0, 0.6, 0]} distanceFactor={6}>
+                    <div className="pointer-events-none select-none whitespace-nowrap rounded bg-red-600 px-2 py-0.5 text-[11px] font-medium text-white shadow">
+                      {invalidMessage}
+                    </div>
+                  </Html>
+                )}
+              </group>
+            );
+          }
+          const wall = structures.find((s) => s.id === snap.wallId)!;
+          const roofDepth = STRUCTURE_DEFAULTS.roof.thickness;
+          const slab = STRUCTURE_DEFAULTS.roof.height;
+          return (
+            <group position={snap.position} rotation={[0, snap.rotationY, 0]}>
+              <mesh position={[0, slab / 2, 0]}>
+                <boxGeometry args={[snap.length, slab, roofDepth]} />
+                <meshStandardMaterial
+                  color={invalid ? GHOST_BAD : "#cfc4ac"}
+                  transparent
+                  opacity={0.6}
+                />
+              </mesh>
+              {/* subtle guide showing attached wall edge */}
+              <mesh position={[0, -wall.height + 0.005, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+                <planeGeometry args={[snap.length, roofDepth]} />
+                <meshBasicMaterial color={GHOST_OK} transparent opacity={0.15} />
+              </mesh>
+            </group>
+          );
+        })()
+      ) : (
+        pos && (
+          <group position={pos}>
+            <Ghost invalid={invalid} pending={pending} />
+            <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+              <ringGeometry
+                args={[ghostRadius(pending) - 0.02, ghostRadius(pending), 48]}
+              />
+              <meshBasicMaterial color={color} transparent opacity={0.95} />
+            </mesh>
+            {invalid && (
+              <Html center position={[0, 0.6, 0]} distanceFactor={6}>
+                <div className="pointer-events-none select-none whitespace-nowrap rounded bg-red-600 px-2 py-0.5 text-[11px] font-medium text-white shadow">
+                  {invalidMessage}
+                </div>
+              </Html>
+            )}
+          </group>
+        )
       )}
     </group>
   );

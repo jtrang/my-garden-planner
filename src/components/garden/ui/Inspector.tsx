@@ -48,7 +48,35 @@ export function Inspector() {
         </div>
       )}
 
-      {structure && (
+      {structure && structure.variant === "roof" && (
+        <section>
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="font-display text-xs font-semibold uppercase tracking-wider text-stone-500">
+              Roof
+            </h2>
+            <Button variant="ghost" size="sm" onClick={deleteSelected} className="h-6 text-xs text-red-600">
+              Delete
+            </Button>
+          </div>
+          <p className="mb-2 text-xs text-stone-600">
+            Attached to a wall. Length matches the wall. Adjust how far it extends outward.
+          </p>
+          <div className="grid grid-cols-1 gap-2 text-xs">
+            <NumField
+              label={`Depth (${ul})`}
+              value={metersToDisplay(structure.thickness, units)}
+              step={units === "metric" ? 10 : 3}
+              onChange={(v) =>
+                updateStructure(structure.id, {
+                  thickness: Math.max(0.2, displayToMeters(v, units)),
+                })
+              }
+            />
+          </div>
+        </section>
+      )}
+
+      {structure && structure.variant !== "roof" && (
         <section>
           <div className="mb-2 flex items-center justify-between">
             <h2 className="font-display text-xs font-semibold uppercase tracking-wider text-stone-500">

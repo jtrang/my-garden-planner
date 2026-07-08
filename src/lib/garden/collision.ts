@@ -88,6 +88,62 @@ export function newPlanterFootprint(shape: PlanterShape) {
   };
 }
 
+/**
+ * Given a cursor point (x,z), find the nearest solid masonry wall and compute
+ * where a roof snapping to that wall's near face should be placed.
+ * Returns null when no walls exist.
+ */
+export function nearestWallSnap(
+  x: number,
+  z: number,
+  structures: Structure[],
+  roofDepth = 1.5,
+): {
+  wallId: string;
+  side: 1 | -1;
+  position: [number, number, number];
+  rotationY: number;
+  length: number;
+} | null {
+  const walls = structures.filter((s) => s.variant === "wall");
+  if (walls.length === 0) return null;
+  let best: {
+    wallId: string;
+    side: 1 | -1;
+    position: [number, number, number];
+    rotationY: number;
+    length: number;
+  } | null = null;
+  let bestDist = Infinity;
+  for (const w of walls) {
+    const cos = Math.cos(w.rotationY);
+    const sin = Math.sin(w.rotationY);
+    const dx = x - w.position[0];
+    const dz = z - w.position[2];
+    // Wall-local: X = along length, Z = perpendicular
+    const lz = -dx * sin + dz * cos;
+    const side: 1 | -1 = lz >= 0 ? 1 : -1;
+    // Roof center offset in wall-local coords
+    const rlz = (w.thickness / 2 + roofDepth / 2) * side;
+    const wx = w.position[0] + -rlz * sin;
+    const wz = w.position[2] + rlz * cos;
+    const dist = Math.hypot(x - wx, z - wz);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = {
+        wallId: w.id,
+        side,
+        position: [wx, w.height, wz],
+        rotationY: w.rotationY,
+        length: w.length,
+      };
+    }
+  }
+  return best;
+}
+
+
+
 
 /** Returns the planter whose footprint contains (x, z), if any. */
 export function findContainingPlanter(x: number, z: number, planters: Planter[]) {

@@ -225,7 +225,7 @@ export function ResizeHandles() {
   }
 
   const structure = structures.find((s) => s.id === selectedId);
-  if (structure) {
+  if (structure && structure.variant !== "roof") {
     const setLength = (halfL: number) => {
       const newL = halfL * 2;
       const state = useGarden.getState();

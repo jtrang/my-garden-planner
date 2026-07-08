@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { PlantSpecies } from "./plants-catalog";
 import type { Units } from "./units";
+import { nearestWallSnap } from "./collision";
 
 export type PlanterShape = "rect" | "circle";
 
@@ -26,7 +27,7 @@ export interface Plant {
 
 export type CameraView = "perspective" | "top" | "front";
 
-export type StructureVariant = "wall" | "fenceWood" | "fenceGlass";
+export type StructureVariant = "wall" | "fenceWood" | "fenceGlass" | "roof";
 
 export interface Structure {
   id: string;
@@ -34,8 +35,11 @@ export interface Structure {
   length: number; // along local X
   height: number;
   thickness: number;
-  position: [number, number, number]; // base y = 0
+  position: [number, number, number]; // base y = 0 (roof: y = attached wall height)
   rotationY: number;
+  // Roof only: which wall it's attached to and which face (+1 / -1 in wall-local Z).
+  attachedToId?: string;
+  attachedSide?: 1 | -1;
 }
 
 export type Pending =
@@ -78,6 +82,7 @@ export const STRUCTURE_DEFAULTS: Record<
   wall: { length: 2, height: 1.8, thickness: 0.15, label: "Wall" },
   fenceWood: { length: 2, height: 1.2, thickness: 0.05, label: "Wood fence" },
   fenceGlass: { length: 2, height: 1.1, thickness: 0.04, label: "Glass fence" },
+  roof: { length: 2, height: 0.08, thickness: 1.5, label: "Roof" },
 };
 
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -140,20 +145,41 @@ export const useGarden = create<GardenState>()(
           get().updatePlant(id, { position: [x, 0, z] });
         } else {
           const d = STRUCTURE_DEFAULTS[pending.variant];
-          const structure: Structure = {
-            id,
-            variant: pending.variant,
-            length: d.length,
-            height: d.height,
-            thickness: d.thickness,
-            position: [x, 0, z],
-            rotationY: 0,
-          };
-          set((s) => ({
-            structures: [...s.structures, structure],
-            selectedId: id,
-            pending: null,
-          }));
+          if (pending.variant === "roof") {
+            const snap = nearestWallSnap(x, z, get().structures);
+            if (!snap) return; // silently ignore — need a wall
+            const structure: Structure = {
+              id,
+              variant: "roof",
+              length: snap.length,
+              height: d.height,
+              thickness: d.thickness,
+              position: snap.position,
+              rotationY: snap.rotationY,
+              attachedToId: snap.wallId,
+              attachedSide: snap.side,
+            };
+            set((s) => ({
+              structures: [...s.structures, structure],
+              selectedId: id,
+              pending: null,
+            }));
+          } else {
+            const structure: Structure = {
+              id,
+              variant: pending.variant,
+              length: d.length,
+              height: d.height,
+              thickness: d.thickness,
+              position: [x, 0, z],
+              rotationY: 0,
+            };
+            set((s) => ({
+              structures: [...s.structures, structure],
+              selectedId: id,
+              pending: null,
+            }));
+          }
         }
       },
 
@@ -238,7 +264,9 @@ export const useGarden = create<GardenState>()(
         set((s) => ({
           planters: s.planters.filter((p) => p.id !== id),
           plants: s.plants.filter((p) => p.id !== id && p.plantedInId !== id),
-          structures: s.structures.filter((st) => st.id !== id),
+          structures: s.structures.filter(
+            (st) => st.id !== id && st.attachedToId !== id,
+          ),
           selectedId: null,
         }));
       },
