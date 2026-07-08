@@ -12,6 +12,12 @@ const GROUND_PALETTE = [
   "#7a8a6c", // sage
 ];
 
+const SKIN_PREVIEWS: Record<GroundSkin, string> = {
+  wood: "repeating-linear-gradient(0deg, #8a5a34 0 6px, #6f4426 6px 7px)",
+  concrete: "#bcbab5",
+  grass: "#4f7a34",
+};
+
 export function Inspector() {
   const selectedId = useGarden((s) => s.selectedId);
   const planters = useGarden((s) => s.planters);
