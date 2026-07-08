@@ -20,8 +20,8 @@ function makeDitherAlphaTexture() {
     15, 47, 7, 39, 13, 45, 5, 37,
     63, 31, 55, 23, 61, 29, 53, 21,
   ];
-  // Threshold: opaque when bayer < 64 * 0.35  → ~35% coverage
-  const threshold = 64 * 0.35;
+  // Threshold: opaque when bayer < 64 * 0.15  → ~15% coverage (faint shadow)
+  const threshold = 64 * 0.15;
   for (let i = 0; i < bayer.length; i++) {
     const opaque = bayer[i] < threshold ? 255 : 0;
     data[i * 4 + 0] = 255;
