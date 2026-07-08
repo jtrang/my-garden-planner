@@ -1,7 +1,7 @@
 import { Canvas, useThree } from "@react-three/fiber";
-import { OrbitControls, TransformControls } from "@react-three/drei";
-import { Suspense, useEffect, useRef } from "react";
-import type { Mesh, PerspectiveCamera as PerspectiveCameraT } from "three";
+import { OrbitControls } from "@react-three/drei";
+import { Suspense, useEffect } from "react";
+import type { PerspectiveCamera as PerspectiveCameraT } from "three";
 import { useGarden } from "@/lib/garden/store";
 import { Ground } from "./Ground";
 import { Sun } from "./Sun";
@@ -9,6 +9,7 @@ import { Planter } from "./Planter";
 import { Plant } from "./Plant";
 import { Structure } from "./Structure";
 import { PlacementPreview } from "./PlacementPreview";
+import { ResizeHandles } from "./ResizeHandles";
 
 export function Scene() {
   const planters = useGarden((s) => s.planters);
@@ -36,7 +37,7 @@ export function Scene() {
         {structures.map((st) => (
           <Structure key={st.id} structure={st} />
         ))}
-        <SelectionTransformer />
+        <ResizeHandles />
         <PlacementPreview />
         <OrbitControls makeDefault enableDamping dampingFactor={0.1} />
       </Suspense>
