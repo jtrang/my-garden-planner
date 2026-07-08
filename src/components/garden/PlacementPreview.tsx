@@ -54,16 +54,26 @@ export function PlacementPreview() {
         invalidMessage = "Overlaps another object";
       }
     } else if (pending.kind === "structure") {
-      const d = STRUCTURE_DEFAULTS[pending.variant];
-      if (
-        structureOverlaps(
-          { length: d.length, thickness: d.thickness, x: pos[0], z: pos[2] },
-          planters,
-          structures,
-        )
-      ) {
-        invalid = true;
-        invalidMessage = "Overlaps another object";
+      if (pending.variant === "roof") {
+        const snap = nearestWallSnap(pos[0], pos[2], structures);
+        if (!snap) {
+          invalid = true;
+          invalidMessage = structures.some((s) => s.variant === "wall")
+            ? "Move near a wall"
+            : "Add a masonry wall first";
+        }
+      } else {
+        const d = STRUCTURE_DEFAULTS[pending.variant];
+        if (
+          structureOverlaps(
+            { length: d.length, thickness: d.thickness, x: pos[0], z: pos[2] },
+            planters,
+            structures,
+          )
+        ) {
+          invalid = true;
+          invalidMessage = "Overlaps another object";
+        }
       }
     } else {
       if (!findContainingPlanter(pos[0], pos[2], planters)) {
