@@ -51,7 +51,20 @@ export function Structure({ structure }: Props) {
 
   const drag = useGroundDrag(
     () => structure.position,
-    (x, z) => updateStructure(structure.id, { position: [x, 0, z] }),
+    (x, z) => {
+      const state = useGarden.getState();
+      if (
+        structureOverlaps(
+          { length: structure.length, thickness: structure.thickness, x, z },
+          state.planters,
+          state.structures,
+          structure.id,
+        )
+      ) {
+        return; // refuse move that would overlap
+      }
+      updateStructure(structure.id, { position: [x, 0, z] });
+    },
   );
 
   return (
