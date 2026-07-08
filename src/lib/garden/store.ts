@@ -252,11 +252,27 @@ export const useGarden = create<GardenState>()(
         })),
 
       updateStructure: (id, patch) =>
-        set((s) => ({
-          structures: s.structures.map((st) =>
-            st.id === id ? { ...st, ...patch } : st,
-          ),
-        })),
+        set((s) => {
+          const target = s.structures.find((st) => st.id === id);
+          if (!target) return s;
+          const lengthChanged =
+            patch.length !== undefined && patch.length !== target.length;
+          return {
+            structures: s.structures.map((st) => {
+              if (st.id === id) return { ...st, ...patch };
+              // Cascade wall length to attached roofs so stored data stays in sync.
+              if (
+                lengthChanged &&
+                target.variant === "wall" &&
+                st.variant === "roof" &&
+                st.attachedToId === id
+              ) {
+                return { ...st, length: patch.length! };
+              }
+              return st;
+            }),
+          };
+        }),
 
       deleteSelected: () => {
         const id = get().selectedId;
