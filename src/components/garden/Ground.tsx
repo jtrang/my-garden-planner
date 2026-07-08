@@ -104,14 +104,15 @@ export function Ground() {
         }}
       >
         <planeGeometry args={[width, depth]} />
-        {groundStyle.type === "color" ? (
-          <meshStandardMaterial color={groundStyle.color} roughness={0.95} />
-        ) : (
-          <meshStandardMaterial
-            map={skinTexture ?? undefined}
-            roughness={groundStyle.skin === "concrete" ? 0.85 : 0.95}
-          />
-        )}
+        <meshStandardMaterial
+          color={groundStyle.type === "color" ? groundStyle.color : "#ffffff"}
+          map={groundStyle.type === "skin" ? skinTexture : null}
+          roughness={
+            groundStyle.type === "skin" && groundStyle.skin === "concrete"
+              ? 0.85
+              : 0.95
+          }
+        />
       </mesh>
       {/* surrounding neutral floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.005, 0]} receiveShadow>
