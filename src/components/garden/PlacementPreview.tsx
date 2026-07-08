@@ -6,6 +6,7 @@ import { PlantModel } from "./plants/PlantModels";
 import { PLANT_CATALOG } from "@/lib/garden/plants-catalog";
 import {
   findContainingPlanter,
+  nearestWallSnap,
   newPlanterFootprint,
   planterOverlaps,
   structureOverlaps,
