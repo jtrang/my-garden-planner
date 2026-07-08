@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import * as THREE from "three";
-import { Grid } from "@react-three/drei";
+import { Grid, Text } from "@react-three/drei";
 import { useGarden, type GroundSkin } from "@/lib/garden/store";
 
 function makeSkinTexture(skin: GroundSkin): THREE.CanvasTexture {
