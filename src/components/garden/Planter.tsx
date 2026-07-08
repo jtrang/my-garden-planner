@@ -23,11 +23,12 @@ export function Planter({ planter }: Props) {
   const drag = useGroundDrag(
     () => planter.position,
     (x, z) => {
-      const others = useGarden.getState().planters;
+      const state = useGarden.getState();
       if (
         planterOverlaps(
           { shape: planter.shape, width: planter.width, depth: planter.depth, x, z },
-          others,
+          state.planters,
+          state.structures,
           planter.id,
         )
       ) {
