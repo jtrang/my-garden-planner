@@ -263,7 +263,9 @@ export const useGarden = create<GardenState>()(
         set((s) => ({
           planters: s.planters.filter((p) => p.id !== id),
           plants: s.plants.filter((p) => p.id !== id && p.plantedInId !== id),
-          structures: s.structures.filter((st) => st.id !== id),
+          structures: s.structures.filter(
+            (st) => st.id !== id && st.attachedToId !== id,
+          ),
           selectedId: null,
         }));
       },
