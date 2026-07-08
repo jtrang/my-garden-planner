@@ -1,9 +1,14 @@
-import type { Planter, PlanterShape } from "@/lib/garden/store";
+import type { Planter, PlanterShape, Structure } from "@/lib/garden/store";
 
 /** Bounding-circle radius for collision. */
 export function planterRadius(shape: PlanterShape, width: number, depth: number) {
   if (shape === "circle") return width;
   return Math.hypot(width / 2, depth / 2);
+}
+
+/** Bounding-circle radius for a structure (wall / fence). */
+export function structureRadius(length: number, thickness: number) {
+  return Math.hypot(length / 2, thickness / 2);
 }
 
 export interface PlanterFootprint {
@@ -14,21 +19,64 @@ export interface PlanterFootprint {
   z: number;
 }
 
-export function planterOverlaps(
-  candidate: PlanterFootprint,
-  others: Planter[],
+/** Circular footprint at (x,z) with the given radius. */
+export interface CircleFootprint {
+  radius: number;
+  x: number;
+  z: number;
+}
+
+function overlapsAny(
+  candidate: CircleFootprint,
+  planters: Planter[],
+  structures: Structure[],
   ignoreId?: string,
 ): boolean {
-  const r1 = planterRadius(candidate.shape, candidate.width, candidate.depth);
-  for (const p of others) {
+  for (const p of planters) {
     if (ignoreId && p.id === ignoreId) continue;
     const r2 = planterRadius(p.shape, p.width, p.depth);
     const dx = candidate.x - p.position[0];
     const dz = candidate.z - p.position[2];
-    // small epsilon so touching edges is allowed
-    if (Math.hypot(dx, dz) + 1e-4 < r1 + r2) return true;
+    if (Math.hypot(dx, dz) + 1e-4 < candidate.radius + r2) return true;
+  }
+  for (const s of structures) {
+    if (ignoreId && s.id === ignoreId) continue;
+    const r2 = structureRadius(s.length, s.thickness);
+    const dx = candidate.x - s.position[0];
+    const dz = candidate.z - s.position[2];
+    if (Math.hypot(dx, dz) + 1e-4 < candidate.radius + r2) return true;
   }
   return false;
+}
+
+export function planterOverlaps(
+  candidate: PlanterFootprint,
+  planters: Planter[],
+  structures: Structure[] = [],
+  ignoreId?: string,
+): boolean {
+  const radius = planterRadius(candidate.shape, candidate.width, candidate.depth);
+  return overlapsAny(
+    { x: candidate.x, z: candidate.z, radius },
+    planters,
+    structures,
+    ignoreId,
+  );
+}
+
+export function structureOverlaps(
+  candidate: { length: number; thickness: number; x: number; z: number },
+  planters: Planter[],
+  structures: Structure[],
+  ignoreId?: string,
+): boolean {
+  const radius = structureRadius(candidate.length, candidate.thickness);
+  return overlapsAny(
+    { x: candidate.x, z: candidate.z, radius },
+    planters,
+    structures,
+    ignoreId,
+  );
 }
 
 /** Default footprint for a newly-placed planter (matches store.commitPlacementAt). */
@@ -54,3 +102,4 @@ export function findContainingPlanter(x: number, z: number, planters: Planter[])
     return Math.abs(lx) <= pl.width / 2 && Math.abs(lz) <= pl.depth / 2;
   });
 }
+

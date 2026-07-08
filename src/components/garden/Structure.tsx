@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import * as THREE from "three";
 import { useGarden, type Structure as StructureT } from "@/lib/garden/store";
 import { useGroundDrag } from "./useGroundDrag";
+import { structureOverlaps } from "@/lib/garden/collision";
 
 // Dithered alpha texture: ~35% of pixels opaque, ~65% transparent.
 // Used as an alphaMap on a customDepthMaterial so the glass panel casts
@@ -50,7 +51,20 @@ export function Structure({ structure }: Props) {
 
   const drag = useGroundDrag(
     () => structure.position,
-    (x, z) => updateStructure(structure.id, { position: [x, 0, z] }),
+    (x, z) => {
+      const state = useGarden.getState();
+      if (
+        structureOverlaps(
+          { length: structure.length, thickness: structure.thickness, x, z },
+          state.planters,
+          state.structures,
+          structure.id,
+        )
+      ) {
+        return; // refuse move that would overlap
+      }
+      updateStructure(structure.id, { position: [x, 0, z] });
+    },
   );
 
   return (
