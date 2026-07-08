@@ -237,14 +237,38 @@ function GlassFence({ structure }: { structure: StructureT }) {
   );
 }
 
-function SelectionOutline({ structure }: { structure: StructureT }) {
-  const t = 0.03;
-  const w = structure.length + 0.08;
-  const d = structure.thickness + 0.16;
-  const col = "#3a8fd9";
-  const y = 0.01;
+function RoofMesh({
+  length,
+  depth,
+  slab,
+}: {
+  length: number;
+  depth: number;
+  slab: number;
+}) {
   return (
-    <group position={[0, y, 0]}>
+    <mesh position={[0, slab / 2, 0]} castShadow receiveShadow>
+      <boxGeometry args={[length, slab, depth]} />
+      <meshStandardMaterial color="#cfc4ac" roughness={0.95} />
+    </mesh>
+  );
+}
+
+function SelectionOutline({
+  length,
+  thickness,
+  yOffset = 0,
+}: {
+  length: number;
+  thickness: number;
+  yOffset?: number;
+}) {
+  const t = 0.03;
+  const w = length + 0.08;
+  const d = thickness + 0.16;
+  const col = "#3a8fd9";
+  return (
+    <group position={[0, 0.01 + yOffset, 0]}>
       <mesh position={[0, 0, -d / 2]}>
         <boxGeometry args={[w, t, t]} />
         <meshBasicMaterial color={col} />
@@ -264,3 +288,4 @@ function SelectionOutline({ structure }: { structure: StructureT }) {
     </group>
   );
 }
+
