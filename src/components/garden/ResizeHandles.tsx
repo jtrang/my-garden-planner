@@ -61,7 +61,7 @@ function AxisHandle({
 
   return (
     <mesh
-      position={[wx, HANDLE_Y, wz]}
+      position={[wx, origin[1] + HANDLE_Y, wz]}
       onPointerDown={(e) => {
         if (e.button !== 0) return;
         e.stopPropagation();
@@ -225,6 +225,63 @@ export function ResizeHandles() {
   }
 
   const structure = structures.find((s) => s.id === selectedId);
+  if (structure && structure.variant === "roof") {
+    const wall = structures.find((s) => s.id === structure.attachedToId);
+    if (!wall) return null;
+    const side = structure.attachedSide ?? 1;
+    const cos = Math.cos(wall.rotationY);
+    const sin = Math.sin(wall.rotationY);
+    const rlz = (wall.thickness / 2 + structure.thickness / 2) * side;
+    const origin: [number, number, number] = [
+      wall.position[0] + -rlz * sin,
+      wall.height,
+      wall.position[2] + rlz * cos,
+    ];
+    const setLength = (halfL: number) => {
+      const newL = Math.max(0.4, halfL * 2);
+      updateStructure(wall.id, { length: newL });
+    };
+    const setDepth = (halfT: number) => {
+      const newT = Math.max(0.2, halfT * 2);
+      updateStructure(structure.id, { thickness: newT });
+    };
+    return (
+      <>
+        <AxisHandle
+          origin={origin}
+          rotationY={wall.rotationY}
+          axis={[1, 0]}
+          halfExtent={wall.length / 2}
+          minHalf={0.2}
+          onChange={setLength}
+        />
+        <AxisHandle
+          origin={origin}
+          rotationY={wall.rotationY}
+          axis={[-1, 0]}
+          halfExtent={wall.length / 2}
+          minHalf={0.2}
+          onChange={setLength}
+        />
+        <AxisHandle
+          origin={origin}
+          rotationY={wall.rotationY}
+          axis={[0, 1]}
+          halfExtent={structure.thickness / 2}
+          minHalf={0.1}
+          onChange={setDepth}
+        />
+        <AxisHandle
+          origin={origin}
+          rotationY={wall.rotationY}
+          axis={[0, -1]}
+          halfExtent={structure.thickness / 2}
+          minHalf={0.1}
+          onChange={setDepth}
+        />
+      </>
+    );
+  }
   if (structure && structure.variant !== "roof") {
     const setLength = (halfL: number) => {
       const newL = halfL * 2;
