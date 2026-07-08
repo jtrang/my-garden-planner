@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Html } from "@react-three/drei";
-import { useGarden } from "@/lib/garden/store";
+import { useGarden, STRUCTURE_DEFAULTS } from "@/lib/garden/store";
 import { usePlacementHover } from "@/lib/garden/placement-hover";
 import { PlantModel } from "./plants/PlantModels";
 import { PLANT_CATALOG } from "@/lib/garden/plants-catalog";
@@ -8,6 +8,7 @@ import {
   findContainingPlanter,
   newPlanterFootprint,
   planterOverlaps,
+  structureOverlaps,
 } from "@/lib/garden/collision";
 
 const GHOST_OK = "#3a8fd9";
