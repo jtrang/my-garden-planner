@@ -115,6 +115,19 @@ export function PlantLibrary() {
             active={isPending((p) => p.kind === "structure" && p.variant === "fenceGlass")}
             onClick={() => startPlacement({ kind: "structure", variant: "fenceGlass" })}
           />
+          <StructureButton
+            variant="roof"
+            label="Roof"
+            sub="Masonry, attaches to a wall"
+            preview={
+              <div className="flex h-6 w-8 flex-col justify-end">
+                <div className="h-1.5 w-full rounded-sm bg-[#cfc4ac]" />
+                <div className="ml-1 h-3 w-1.5 bg-[#cfc4ac]" />
+              </div>
+            }
+            active={isPending((p) => p.kind === "structure" && p.variant === "roof")}
+            onClick={() => startPlacement({ kind: "structure", variant: "roof" })}
+          />
         </div>
       </section>
 
