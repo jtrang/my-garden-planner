@@ -26,7 +26,7 @@ export interface Plant {
 
 export type CameraView = "perspective" | "top" | "front";
 
-export type StructureVariant = "wall" | "fenceWood" | "fenceGlass";
+export type StructureVariant = "wall" | "fenceWood" | "fenceGlass" | "roof";
 
 export interface Structure {
   id: string;
@@ -34,8 +34,11 @@ export interface Structure {
   length: number; // along local X
   height: number;
   thickness: number;
-  position: [number, number, number]; // base y = 0
+  position: [number, number, number]; // base y = 0 (roof: y = attached wall height)
   rotationY: number;
+  // Roof only: which wall it's attached to and which face (+1 / -1 in wall-local Z).
+  attachedToId?: string;
+  attachedSide?: 1 | -1;
 }
 
 export type Pending =
