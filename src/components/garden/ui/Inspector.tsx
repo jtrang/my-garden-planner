@@ -1,7 +1,22 @@
-import { useGarden, STRUCTURE_DEFAULTS } from "@/lib/garden/store";
+import { useGarden, STRUCTURE_DEFAULTS, type GroundSkin } from "@/lib/garden/store";
 import { PLANT_CATALOG } from "@/lib/garden/plants-catalog";
 import { displayToMeters, metersToDisplay, unitLabel } from "@/lib/garden/units";
 import { Button } from "@/components/ui/button";
+
+const GROUND_PALETTE = [
+  "#ece5d2", // sand (default)
+  "#c9b892", // warm tan
+  "#8a6b46", // rich soil
+  "#5a4632", // dark bark
+  "#d8d3c6", // pale stone
+  "#7a8a6c", // sage
+];
+
+const SKIN_PREVIEWS: Record<GroundSkin, string> = {
+  wood: "repeating-linear-gradient(0deg, #8a5a34 0 6px, #6f4426 6px 7px)",
+  concrete: "#bcbab5",
+  grass: "#4f7a34",
+};
 
 export function Inspector() {
   const selectedId = useGarden((s) => s.selectedId);
@@ -10,6 +25,8 @@ export function Inspector() {
   const structures = useGarden((s) => s.structures);
   const garden = useGarden((s) => s.garden);
   const setGarden = useGarden((s) => s.setGarden);
+  const groundStyle = useGarden((s) => s.groundStyle);
+  const setGroundStyle = useGarden((s) => s.setGroundStyle);
   const updatePlanter = useGarden((s) => s.updatePlanter);
   const updateStructure = useGarden((s) => s.updateStructure);
   const deleteSelected = useGarden((s) => s.deleteSelected);
@@ -39,6 +56,72 @@ export function Inspector() {
             step={units === "metric" ? 0.1 : 0.5}
             onChange={(v) => setGarden({ ...garden, depth: units === "metric" ? v : v / 3.28084 })}
           />
+        </div>
+
+        <div className="mt-3">
+          <div className="mb-1 text-[10px] uppercase tracking-wider text-stone-500">
+            Ground
+          </div>
+          <div className="mb-2 grid grid-cols-3 gap-1">
+            {(["wood", "concrete", "grass"] as GroundSkin[]).map((s) => {
+              const active = groundStyle.type === "skin" && groundStyle.skin === s;
+              return (
+                <button
+                  key={s}
+                  onClick={() => setGroundStyle({ type: "skin", skin: s })}
+                  className={`rounded border p-1 text-[11px] capitalize hover:border-stone-500 ${
+                    active
+                      ? "border-stone-800 bg-stone-100 ring-1 ring-stone-800"
+                      : "border-stone-300 bg-white text-stone-700"
+                  }`}
+                >
+                  <div
+                    className="mx-auto mb-1 h-6 w-full rounded-sm"
+                    style={{ background: SKIN_PREVIEWS[s] }}
+                  />
+                  {s === "wood" ? "Wood deck" : s}
+                </button>
+              );
+            })}
+          </div>
+          <div className="mb-1 text-[10px] uppercase tracking-wider text-stone-500">
+            Color
+          </div>
+          <div className="flex flex-wrap items-center gap-1">
+            {GROUND_PALETTE.map((c) => {
+              const active = groundStyle.type === "color" && groundStyle.color === c;
+              return (
+                <button
+                  key={c}
+                  aria-label={c}
+                  onClick={() => setGroundStyle({ type: "color", color: c })}
+                  className={`h-6 w-6 rounded-full border ${
+                    active ? "ring-2 ring-stone-800" : "border-stone-300"
+                  }`}
+                  style={{ background: c }}
+                />
+              );
+            })}
+            <label
+              className={`flex h-6 items-center gap-1 rounded border px-1 text-[11px] cursor-pointer ${
+                groundStyle.type === "color" &&
+                !GROUND_PALETTE.includes(groundStyle.color)
+                  ? "border-stone-800 ring-1 ring-stone-800"
+                  : "border-stone-300 bg-white text-stone-700 hover:border-stone-500"
+              }`}
+              title="Custom color"
+            >
+              <input
+                type="color"
+                className="h-4 w-4 cursor-pointer border-0 bg-transparent p-0"
+                value={groundStyle.type === "color" ? groundStyle.color : "#ece5d2"}
+                onChange={(e) =>
+                  setGroundStyle({ type: "color", color: e.target.value })
+                }
+              />
+              Custom
+            </label>
+          </div>
         </div>
       </section>
 
