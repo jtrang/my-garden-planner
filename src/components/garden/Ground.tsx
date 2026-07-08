@@ -138,8 +138,8 @@ export function Ground() {
 }
 
 function CompassLabels({ width, depth }: { width: number; depth: number }) {
-  const off = 0.5; // meters outside the plot
-  const size = 0.35;
+  const off = 1.0; // meters outside the plot
+  const size = 0.5;
   // Convention: -Z = North, +Z = South, +X = East, -X = West
   const items: { label: string; pos: [number, number, number] }[] = [
     { label: "N", pos: [0, 0.02, -depth / 2 - off] },
