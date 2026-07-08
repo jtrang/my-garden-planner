@@ -47,10 +47,16 @@ export type Pending =
   | { kind: "plant"; species: PlantSpecies }
   | { kind: "structure"; variant: StructureVariant };
 
+export type GroundSkin = "wood" | "concrete" | "grass";
+export type GroundStyle =
+  | { type: "color"; color: string }
+  | { type: "skin"; skin: GroundSkin };
+
 interface GardenState {
   garden: { width: number; depth: number };
   sunTime: number; // 6..20
   units: Units;
+  groundStyle: GroundStyle;
   planters: Planter[];
   plants: Plant[];
   structures: Structure[];
@@ -62,6 +68,7 @@ interface GardenState {
   setGarden: (g: { width: number; depth: number }) => void;
   setSunTime: (t: number) => void;
   setUnits: (u: Units) => void;
+  setGroundStyle: (s: GroundStyle) => void;
   startPlacement: (pending: Pending) => void;
   cancelPlacement: () => void;
   commitPlacementAt: (x: number, z: number) => void;
