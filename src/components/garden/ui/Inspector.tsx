@@ -1,7 +1,16 @@
-import { useGarden, STRUCTURE_DEFAULTS } from "@/lib/garden/store";
+import { useGarden, STRUCTURE_DEFAULTS, type GroundSkin } from "@/lib/garden/store";
 import { PLANT_CATALOG } from "@/lib/garden/plants-catalog";
 import { displayToMeters, metersToDisplay, unitLabel } from "@/lib/garden/units";
 import { Button } from "@/components/ui/button";
+
+const GROUND_PALETTE = [
+  "#ece5d2", // sand (default)
+  "#c9b892", // warm tan
+  "#8a6b46", // rich soil
+  "#5a4632", // dark bark
+  "#d8d3c6", // pale stone
+  "#7a8a6c", // sage
+];
 
 export function Inspector() {
   const selectedId = useGarden((s) => s.selectedId);
@@ -10,6 +19,8 @@ export function Inspector() {
   const structures = useGarden((s) => s.structures);
   const garden = useGarden((s) => s.garden);
   const setGarden = useGarden((s) => s.setGarden);
+  const groundStyle = useGarden((s) => s.groundStyle);
+  const setGroundStyle = useGarden((s) => s.setGroundStyle);
   const updatePlanter = useGarden((s) => s.updatePlanter);
   const updateStructure = useGarden((s) => s.updateStructure);
   const deleteSelected = useGarden((s) => s.deleteSelected);
