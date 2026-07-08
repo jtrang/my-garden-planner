@@ -96,7 +96,8 @@ export function Structure({ structure }: Props) {
       onPointerDown={(e) => {
         if (pending) return;
         select(structure.id);
-        if (!isRoof) drag.onPointerDown(e);
+        if (isRoof) e.stopPropagation();
+        else drag.onPointerDown(e);
       }}
       onPointerMove={isRoof ? undefined : drag.onPointerMove}
       onPointerUp={isRoof ? undefined : drag.onPointerUp}
