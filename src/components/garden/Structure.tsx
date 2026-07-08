@@ -47,7 +47,29 @@ export function Structure({ structure }: Props) {
   const selectedId = useGarden((s) => s.selectedId);
   const updateStructure = useGarden((s) => s.updateStructure);
   const pending = useGarden((s) => s.pending);
+  const structures = useGarden((s) => s.structures);
   const isSelected = selectedId === structure.id;
+  const isRoof = structure.variant === "roof";
+
+  // Roofs derive their transform from the wall they're attached to.
+  let position = structure.position;
+  let rotationY = structure.rotationY;
+  let length = structure.length;
+  if (isRoof && structure.attachedToId) {
+    const wall = structures.find((s) => s.id === structure.attachedToId);
+    if (!wall) return null;
+    const side = structure.attachedSide ?? 1;
+    const cos = Math.cos(wall.rotationY);
+    const sin = Math.sin(wall.rotationY);
+    const rlz = (wall.thickness / 2 + structure.thickness / 2) * side;
+    position = [
+      wall.position[0] + -rlz * sin,
+      wall.height,
+      wall.position[2] + rlz * cos,
+    ];
+    rotationY = wall.rotationY;
+    length = wall.length;
+  }
 
   const drag = useGroundDrag(
     () => structure.position,
@@ -69,24 +91,34 @@ export function Structure({ structure }: Props) {
 
   return (
     <group
-      position={structure.position}
-      rotation={[0, structure.rotationY, 0]}
+      position={position}
+      rotation={[0, rotationY, 0]}
       onPointerDown={(e) => {
         if (pending) return;
         select(structure.id);
-        drag.onPointerDown(e);
+        if (!isRoof) drag.onPointerDown(e);
       }}
-      onPointerMove={drag.onPointerMove}
-      onPointerUp={drag.onPointerUp}
-      onPointerCancel={drag.onPointerCancel}
+      onPointerMove={isRoof ? undefined : drag.onPointerMove}
+      onPointerUp={isRoof ? undefined : drag.onPointerUp}
+      onPointerCancel={isRoof ? undefined : drag.onPointerCancel}
     >
       {structure.variant === "wall" && <WallMesh structure={structure} />}
       {structure.variant === "fenceWood" && <WoodFence structure={structure} />}
       {structure.variant === "fenceGlass" && <GlassFence structure={structure} />}
-      {isSelected && <SelectionOutline structure={structure} />}
+      {isRoof && (
+        <RoofMesh length={length} depth={structure.thickness} slab={structure.height} />
+      )}
+      {isSelected && (
+        <SelectionOutline
+          length={length}
+          thickness={isRoof ? structure.thickness : structure.thickness}
+          yOffset={isRoof ? structure.height + 0.01 : 0}
+        />
+      )}
     </group>
   );
 }
+
 
 function WallMesh({ structure }: { structure: StructureT }) {
   const { length: L, height: H, thickness: T } = structure;
