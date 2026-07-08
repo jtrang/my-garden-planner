@@ -61,7 +61,7 @@ function AxisHandle({
 
   return (
     <mesh
-      position={[wx, HANDLE_Y, wz]}
+      position={[wx, origin[1] + HANDLE_Y, wz]}
       onPointerDown={(e) => {
         if (e.button !== 0) return;
         e.stopPropagation();
