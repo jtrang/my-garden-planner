@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { PlantSpecies } from "./plants-catalog";
 import type { Units } from "./units";
+import { nearestWallSnap } from "./collision";
 
 export type PlanterShape = "rect" | "circle";
 
