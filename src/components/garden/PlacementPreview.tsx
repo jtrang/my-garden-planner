@@ -19,6 +19,7 @@ export function PlacementPreview() {
   const commit = useGarden((s) => s.commitPlacementAt);
   const cancel = useGarden((s) => s.cancelPlacement);
   const planters = useGarden((s) => s.planters);
+  const structures = useGarden((s) => s.structures);
   const pos = usePlacementHover((s) => s.pos);
   const setPos = usePlacementHover((s) => s.setPos);
 
@@ -45,10 +46,23 @@ export function PlacementPreview() {
         planterOverlaps(
           { ...newPlanterFootprint(pending.shape), x: pos[0], z: pos[2] },
           planters,
+          structures,
         )
       ) {
         invalid = true;
-        invalidMessage = "Overlaps another planter";
+        invalidMessage = "Overlaps another object";
+      }
+    } else if (pending.kind === "structure") {
+      const d = STRUCTURE_DEFAULTS[pending.variant];
+      if (
+        structureOverlaps(
+          { length: d.length, thickness: d.thickness, x: pos[0], z: pos[2] },
+          planters,
+          structures,
+        )
+      ) {
+        invalid = true;
+        invalidMessage = "Overlaps another object";
       }
     } else {
       if (!findContainingPlanter(pos[0], pos[2], planters)) {
