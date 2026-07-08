@@ -1,7 +1,7 @@
 import { Canvas, useThree } from "@react-three/fiber";
-import { OrbitControls, TransformControls } from "@react-three/drei";
-import { Suspense, useEffect, useRef } from "react";
-import type { Mesh, PerspectiveCamera as PerspectiveCameraT } from "three";
+import { OrbitControls } from "@react-three/drei";
+import { Suspense, useEffect } from "react";
+import type { PerspectiveCamera as PerspectiveCameraT } from "three";
 import { useGarden } from "@/lib/garden/store";
 import { Ground } from "./Ground";
 import { Sun } from "./Sun";
@@ -9,6 +9,7 @@ import { Planter } from "./Planter";
 import { Plant } from "./Plant";
 import { Structure } from "./Structure";
 import { PlacementPreview } from "./PlacementPreview";
+import { ResizeHandles } from "./ResizeHandles";
 
 export function Scene() {
   const planters = useGarden((s) => s.planters);
@@ -36,7 +37,7 @@ export function Scene() {
         {structures.map((st) => (
           <Structure key={st.id} structure={st} />
         ))}
-        <SelectionTransformer />
+        <ResizeHandles />
         <PlacementPreview />
         <OrbitControls makeDefault enableDamping dampingFactor={0.1} />
       </Suspense>
@@ -61,67 +62,4 @@ function CameraRig({ view }: { view: string }) {
     }
   }, [view, camera, controls]);
   return null;
-}
-
-function SelectionTransformer() {
-  const selectedId = useGarden((s) => s.selectedId);
-  const planters = useGarden((s) => s.planters);
-  const plants = useGarden((s) => s.plants);
-  const structures = useGarden((s) => s.structures);
-  const updatePlanter = useGarden((s) => s.updatePlanter);
-  const updatePlant = useGarden((s) => s.updatePlant);
-  const updateStructure = useGarden((s) => s.updateStructure);
-  const mode = useGarden((s) => s.transformMode);
-  const proxyRef = useRef<Mesh>(null);
-
-  const selectedPlanter = planters.find((p) => p.id === selectedId);
-  const selectedPlant = plants.find((p) => p.id === selectedId);
-  const selectedStructure = structures.find((s) => s.id === selectedId);
-  const target = selectedPlanter ?? selectedPlant ?? selectedStructure;
-
-  // sync proxy to current selection position
-  useEffect(() => {
-    if (!proxyRef.current || !target) return;
-    proxyRef.current.position.set(target.position[0], target.position[1], target.position[2]);
-    proxyRef.current.rotation.set(0, target.rotationY, 0);
-  }, [target]);
-
-  if (!target) return null;
-
-  const handleChange = () => {
-    const obj = proxyRef.current;
-    if (!obj) return;
-    if (selectedPlanter) {
-      updatePlanter(selectedPlanter.id, {
-        position: [obj.position.x, 0, obj.position.z],
-        rotationY: obj.rotation.y,
-      });
-    } else if (selectedPlant) {
-      updatePlant(selectedPlant.id, {
-        position: [obj.position.x, obj.position.y, obj.position.z],
-        rotationY: obj.rotation.y,
-      });
-    } else if (selectedStructure) {
-      updateStructure(selectedStructure.id, {
-        position: [obj.position.x, 0, obj.position.z],
-        rotationY: obj.rotation.y,
-      });
-    }
-  };
-
-  return (
-    <TransformControls
-      mode={mode}
-      object={proxyRef as unknown as React.RefObject<Mesh>}
-      showY={mode === "rotate"}
-      showX={mode === "translate"}
-      showZ={mode === "translate"}
-      onObjectChange={handleChange}
-    >
-      <mesh ref={proxyRef} visible={false}>
-        <boxGeometry args={[0.01, 0.01, 0.01]} />
-        <meshBasicMaterial />
-      </mesh>
-    </TransformControls>
-  );
 }
