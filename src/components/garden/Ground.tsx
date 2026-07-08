@@ -132,6 +132,38 @@ export function Ground() {
         infiniteGrid={false}
         position={[0, 0.001, 0]}
       />
+      <CompassLabels width={width} depth={depth} />
     </group>
+  );
+}
+
+function CompassLabels({ width, depth }: { width: number; depth: number }) {
+  const off = 0.5; // meters outside the plot
+  const size = 0.35;
+  // Convention: -Z = North, +Z = South, +X = East, -X = West
+  const items: { label: string; pos: [number, number, number] }[] = [
+    { label: "N", pos: [0, 0.02, -depth / 2 - off] },
+    { label: "S", pos: [0, 0.02, depth / 2 + off] },
+    { label: "E", pos: [width / 2 + off, 0.02, 0] },
+    { label: "W", pos: [-width / 2 - off, 0.02, 0] },
+  ];
+  return (
+    <>
+      {items.map((it) => (
+        <Text
+          key={it.label}
+          position={it.pos}
+          rotation={[-Math.PI / 2, 0, 0]}
+          fontSize={size}
+          color="#4a3f28"
+          anchorX="center"
+          anchorY="middle"
+          outlineWidth={0.015}
+          outlineColor="#f5efe0"
+        >
+          {it.label}
+        </Text>
+      ))}
+    </>
   );
 }
