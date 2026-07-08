@@ -1,5 +1,41 @@
+import { useMemo } from "react";
+import * as THREE from "three";
 import { useGarden, type Structure as StructureT } from "@/lib/garden/store";
 import { useGroundDrag } from "./useGroundDrag";
+
+// Dithered alpha texture: ~35% of pixels opaque, ~65% transparent.
+// Used as an alphaMap on a customDepthMaterial so the glass panel casts
+// only a partial shadow (letting ~65% of light through).
+function makeDitherAlphaTexture() {
+  const size = 8;
+  const data = new Uint8Array(size * size * 4);
+  // 8x8 Bayer matrix (values 0..63)
+  const bayer = [
+    0, 32, 8, 40, 2, 34, 10, 42,
+    48, 16, 56, 24, 50, 18, 58, 26,
+    12, 44, 4, 36, 14, 46, 6, 38,
+    60, 28, 52, 20, 62, 30, 54, 22,
+    3, 35, 11, 43, 1, 33, 9, 41,
+    51, 19, 59, 27, 49, 17, 57, 25,
+    15, 47, 7, 39, 13, 45, 5, 37,
+    63, 31, 55, 23, 61, 29, 53, 21,
+  ];
+  // Threshold: opaque when bayer < 64 * 0.35  → ~35% coverage
+  const threshold = 64 * 0.35;
+  for (let i = 0; i < bayer.length; i++) {
+    const opaque = bayer[i] < threshold ? 255 : 0;
+    data[i * 4 + 0] = 255;
+    data[i * 4 + 1] = 255;
+    data[i * 4 + 2] = 255;
+    data[i * 4 + 3] = opaque;
+  }
+  const tex = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.magFilter = THREE.NearestFilter;
+  tex.minFilter = THREE.NearestFilter;
+  tex.needsUpdate = true;
+  return tex;
+}
 
 interface Props {
   structure: StructureT;
@@ -105,6 +141,23 @@ function GlassFence({ structure }: { structure: StructureT }) {
   const postCount = Math.max(2, Math.round(L / 1.2) + 1);
   const railT = 0.04;
   const usable = L - postW;
+  const panelW = usable - 0.02;
+  const panelH = H - railT * 2 - 0.02;
+
+  // Depth material that only writes to the shadow map on ~35% of texels,
+  // producing a soft partial shadow (~65% light transmission).
+  const shadowDepthMaterial = useMemo(() => {
+    const alphaMap = makeDitherAlphaTexture();
+    // Repeat once per pixel-ish density across the panel
+    alphaMap.repeat.set(Math.max(1, panelW * 40), Math.max(1, panelH * 40));
+    const m = new THREE.MeshDepthMaterial({
+      depthPacking: THREE.RGBADepthPacking,
+      alphaMap,
+      alphaTest: 0.5,
+    });
+    return m;
+  }, [panelW, panelH]);
+
   return (
     <group>
       {/* metal posts */}
@@ -124,9 +177,14 @@ function GlassFence({ structure }: { structure: StructureT }) {
           <meshStandardMaterial color="#8a8f96" roughness={0.35} metalness={0.85} />
         </mesh>
       ))}
-      {/* glass panel */}
-      <mesh position={[0, H / 2, 0]} castShadow receiveShadow>
-        <boxGeometry args={[usable - 0.02, H - railT * 2 - 0.02, 0.012]} />
+      {/* glass panel — casts a dithered partial shadow via customDepthMaterial */}
+      <mesh
+        position={[0, railT + panelH / 2 + 0.01, 0]}
+        castShadow
+        receiveShadow
+        customDepthMaterial={shadowDepthMaterial}
+      >
+        <boxGeometry args={[panelW, panelH, 0.012]} />
         <meshPhysicalMaterial
           color="#c8dbe4"
           roughness={0.05}
