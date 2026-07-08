@@ -100,6 +100,7 @@ export const useGarden = create<GardenState>()(
       garden: { width: 6, depth: 4 },
       sunTime: 13,
       units: "metric",
+      groundStyle: { type: "color", color: "#ece5d2" },
       planters: [],
       plants: [],
       structures: [],
@@ -110,6 +111,7 @@ export const useGarden = create<GardenState>()(
 
       setGarden: (g) => set({ garden: g }),
       setSunTime: (t) => set({ sunTime: t }),
+      setGroundStyle: (groundStyle) => set({ groundStyle }),
       setUnits: (u) => set({ units: u }),
 
       startPlacement: (pending) => set({ pending }),
