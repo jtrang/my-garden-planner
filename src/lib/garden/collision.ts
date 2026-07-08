@@ -140,6 +140,9 @@ export function nearestWallSnap(
     }
   }
   return best;
+}
+
+
 
 
 /** Returns the planter whose footprint contains (x, z), if any. */
