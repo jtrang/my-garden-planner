@@ -141,6 +141,23 @@ function GlassFence({ structure }: { structure: StructureT }) {
   const postCount = Math.max(2, Math.round(L / 1.2) + 1);
   const railT = 0.04;
   const usable = L - postW;
+  const panelW = usable - 0.02;
+  const panelH = H - railT * 2 - 0.02;
+
+  // Depth material that only writes to the shadow map on ~35% of texels,
+  // producing a soft partial shadow (~65% light transmission).
+  const shadowDepthMaterial = useMemo(() => {
+    const alphaMap = makeDitherAlphaTexture();
+    // Repeat once per pixel-ish density across the panel
+    alphaMap.repeat.set(Math.max(1, panelW * 40), Math.max(1, panelH * 40));
+    const m = new THREE.MeshDepthMaterial({
+      depthPacking: THREE.RGBADepthPacking,
+      alphaMap,
+      alphaTest: 0.5,
+    });
+    return m;
+  }, [panelW, panelH]);
+
   return (
     <group>
       {/* metal posts */}
@@ -160,9 +177,14 @@ function GlassFence({ structure }: { structure: StructureT }) {
           <meshStandardMaterial color="#8a8f96" roughness={0.35} metalness={0.85} />
         </mesh>
       ))}
-      {/* glass panel */}
-      <mesh position={[0, H / 2, 0]} castShadow receiveShadow>
-        <boxGeometry args={[usable - 0.02, H - railT * 2 - 0.02, 0.012]} />
+      {/* glass panel — casts a dithered partial shadow via customDepthMaterial */}
+      <mesh
+        position={[0, railT + panelH / 2 + 0.01, 0]}
+        castShadow
+        receiveShadow
+        customDepthMaterial={shadowDepthMaterial}
+      >
+        <boxGeometry args={[panelW, panelH, 0.012]} />
         <meshPhysicalMaterial
           color="#c8dbe4"
           roughness={0.05}
